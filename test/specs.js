@@ -59,30 +59,22 @@ describe('pubsub-hierarchy tests', function() {
 
             returns = events.publish(eventName, params);
 
-            expect(returns).toBe(false);
+            expect(returns).toBe(undefined);
 
         });
 
         it('can stop propagation', function() {
-            expect(false).toBe(true, 'not yet implemented');
+            throw 'tests not yet implemented';
         });
 
         it('can subscribe once', function() {
-            expect(false).toBe(true, 'not yet implemented');
-        });
-
-        it('can subscribe to multiple events', function() {
-            expect(false).toBe(true, 'not yet implemented');
-        });
-
-        it('can publish multiple as alias', function() {
-            expect(false).toBe(true, 'not yet implemented');
+            throw 'not yet implemented';
         });
 
     });
 
     describe('unsubscribe', function() {
-
+        throw 'not yet implemented';
     });
 
 
@@ -233,11 +225,17 @@ describe('pubsub-hierarchy tests', function() {
         //     Provider._reset();
         // });
 
-        it('can subscribe to all event', function() {});
+        it('can subscribe to all event', function() {
+            throw 'not yet implemented';
+        });
 
-        it('can subscribe to a context event', function() {});
+        it('can subscribe to a context event', function() {
+            throw 'not yet implemented';
+        });
 
-        it('can subscribe to any event', function() {});
+        it('can subscribe to any event', function() {
+            throw 'not yet implemented';
+        });
     });
 
 });

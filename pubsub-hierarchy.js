@@ -24,24 +24,6 @@
 
 
 
-
-
-    // one.two.three.four
-    // one.two.four
-    // one.four
-    // four
-    // one.two.three
-    // one.three
-    // three
-    // one.two
-    // two
-    // one
-    // all
-
-
-
-
-
     var tree = {},
 
 
@@ -73,70 +55,67 @@
     },
 
     publishRoot = function(topic, args) {
-        var branches = getTreeBranches(topic);
+        var branches = getTreeBranches(topic),
+        returns;
 
-        // fire(topic, args);
         if (branches) {
 
             // fire(x => x[1])
-            fireBranch(topic, function(x) { return x[1]; }, args);
+            returns = fireBranch(topic, function(x) { return x[1]; }, args);
 
-
-            // (function(rightBranch) {
-            //     fire(branches[1], args);
-
-            //     getTreeBranches(rightBranch)[1];
-            // })(branches[1]);
-            // publishRoot(branches[0], args);
-            publishRoot(branches[0], args);
-            // fire(branches[1], args);
+            returns = returns !== false && publishRoot(branches[0], args);
         } else {
-            fire(topic, args);
+            returns = fire(topic, args);
         }
+
+        return returns;
     },
 
     // fire(x => x[1])
-    // fireBranches(x => x[0])
-    fireBranch = function(topic, filter, args) {
+    fireBranch = function(topic, /* function */ filter, args) {
         var x = getTreeBranches(topic),
         y = x && filter(x),
 
         r = fire(topic, args);
 
-        if (y) {
-            fireBranch(y, filter, args);
+        if (r !== false && y) {
+            r = fireBranch(y, filter, args);
         }
         return r;
     },
 
+    /**
+     * Fire topic
+     * @param {String} topic
+     * @returns {Boolean} true when a listener fired, false to stop propagation.
+     */
     fire = function(topic, args) {
-        // var returns = false;
-console.log('firing topic: ', topic);
-        var topicListeners = _listeners[topic];
+        var returns,
+        topicListeners = _listeners[topic];
 
         if (topicListeners instanceof Array) {
-            var listeners = _listeners[topic], i, listener;
 
-            for (i = 0; (listener = listeners[i]); i++) {
-                // context = listener.context || this;
-                // listener = listener.callback || listener;
+            for (var i = 0, listener; returns !== false && (listener = topicListeners[i]); i++) {
 
-                // TODO: try / catch around event?
-                fireListener(listener, args);
-                // if (listener.apply(context, args) === false) { // Stops event propagation
-                    // return true;
-                // }
-                // returns = true;
+                // TODO: should try / catch around event?
+                returns = fireListener(listener, args);
             }
 
         } else {
-            fireListener(topicListeners, args);
+            returns = fireListener(topicListeners, args);
         }
-        // return returns;
+
+        return returns;
     },
 
+
+    /**
+     * Fire listener
+     * @param {Function} listener
+     * @returns result from listener call - false to stop propagation, true otherwise.
+     */
     fireListener = function(listener, args) {
-        var context = Provider; // or provider context
+        var context = Provider; // or provider context, or DOM Event where applicable?
 
         if (listener) {
             if (typeof(listener) !== 'function' && listener.context) {
@@ -144,7 +123,7 @@ console.log('firing topic: ', topic);
                 listener = listener.listener;
             }
 
-            return listener.apply(context, args);
+            return listener.apply(context, args) !== false;
         }
     };
 
@@ -160,57 +139,19 @@ console.log('firing topic: ', topic);
          */
         publish: function(topic) { // args[1..n] become event params
 
-            var args = Array.prototype.slice.call(arguments);
-            args.shift();
-            args.push(topic);
+            var returns, args = Array.prototype.slice.call(arguments);
 
+            if (arguments.length > 1) {
+                args.push(args.shift());
+            }
 
             // TODO: normalise 'all' so that it's either on its own, or not present
-            // TODO: push topic to end of arguments
 
-            publishRoot(topic, args);
+            returns = publishRoot(topic, args);
 
-            fire('all', args);
-console.log(tree);
+            return fire('all', args) || returns;
         },
 
-
-
-
-
-/*publishHierarchy = function(suffix, category, args, topic) {
-                // suffix = topic.substring(lastIdx + 1);
-
-                // topic = topic || category + SEPARATOR + suffix;
-                fire(category + SEPARATOR + suffix);
-
-                var nextIndex = category.lastIndexOf(SEPARATOR);
-
-                if (nextIndex === -1) {
-                    fire(suffix, args);
-                } else {
-                    publishHierarchy(suffix, category.substring(0, nextIndex));
-                }
-                publishWithArgs(category);
-
-            },
-
-            publishTopic = function(topic) {
-                lastIdx = topic.lastIndexOf(SEPARATOR);
-
-                if (lastIdx !== -1) {
-
-                    var category = topic.substring(0, lastIdx),
-                    // subCategory =
-                    suffix = topic.substring(lastIdx + 1);
-
-
-                    publishHierarchy(suffix, category, args, topic);
-
-                } else {
-                    fire(topic);
-                }
-            }*/
 
 
 
@@ -251,12 +192,9 @@ console.log(tree);
         },
 
 
-
         bind: function(/* Array | DOMElement */ elems, /*string */ topic) {
-
+            throw 'not yet implemented';
         }
-
-
 
     };
 
