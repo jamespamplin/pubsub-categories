@@ -45,7 +45,7 @@ describe('pubsub-hierarchy tests', function() {
             }, 'Event listener never fired', 1000);
 
             runs(function() {
-                expect(this.returns).toBe(true);
+                expect(this.returns).toBe(true, 'unexpected return type');
             });
         });
 
@@ -85,24 +85,21 @@ describe('pubsub-hierarchy tests', function() {
 
     });
 
-// implicit contexts
-// named contexts
 
-    describe('hierarchial events in context', function() {
 
-        it('can fire events in hierarchy: 1 level', function() {
+    describe('hierarchial listeners in global context', function() {
+
+        it('can fire events in hierarchy: 2 levels', function() {
 
             var events = new Provider();
 
             this.totalFireCount = 0;
 
-
-
             listeners = {
-                'all':              new TestListener(this, 4),
-                'testEvent':        new TestListener(this, 3),
-                'root':             new TestListener(this, 2),
-                'root.testEvent':   new TestListener(this, 1)
+                'root.testEvent':   new TestListener(this, 1),
+                'testEvent':        new TestListener(this, 2),
+                'root':             new TestListener(this, 3),
+                'all':              new TestListener(this, 4)
             };
 
             for(var key in listeners) {
@@ -110,24 +107,25 @@ describe('pubsub-hierarchy tests', function() {
                 events.subscribe(key, listener.fire, listener);
             }
 
-            params = ['testParam'];
+            param = 'testParam1';
             eventName = 'root.testEvent';
 
             runs(function() {
-                events.publish(eventName, params);
+                events.publish(eventName, param);
             });
 
             runs(function() {
                 for(var key in listeners) {
                     var listener = listeners[key];
 
-                    expect(listener.fireCount).toEqual(1);
-                    expect(listener.order).toEqual(listener.expectedOrder);
-                    expect(listener.lastEvent).toEqual(eventName);
-                    expect(listener.lastParams).toEqual(params);
+                    expect(listener.fireCount).toNotEqual(0, 'fire count error - listener "' + key + '" never fired');
+                    expect(listener.fireCount).toEqual(1, 'unexpected fire count for listener "' + key + '"');
+                    expect(listener.order).toEqual(listener.expectedOrder, 'incorrect order for listener "' + key + '"');
+                    expect(listener.lastEvent).toEqual(eventName, 'incorrect published topic for listener "' + key + '"');
+                    expect(listener.lastParams).toEqual(param, 'incorrect event arguments for listener "' + key + '"');
                 }
 
-                expect(this.totalFireCount).toEqual(4);
+                expect(this.totalFireCount).toEqual(4, 'unexpected total fire count');
             });
         });
 
@@ -137,15 +135,14 @@ describe('pubsub-hierarchy tests', function() {
 
             this.totalFireCount = 0;
 
-
             listeners = {
-                'all':                       new TestListener(this, 7),
-                'trunk':                     new TestListener(this, 6),
-                'branch':                    new TestListener(this, 5),
-                'trunk.branch':              new TestListener(this, 4),
+                'trunk.branch.leaf':         new TestListener(this, 1),
+                'trunk.leaf':                new TestListener(this, 2),
                 'leaf':                      new TestListener(this, 3),
-                'branch.leaf':               new TestListener(this, 2),
-                'trunk.branch.leaf':         new TestListener(this, 1)
+                'trunk.branch':              new TestListener(this, 4),
+                'branch':                    new TestListener(this, 5),
+                'trunk':                     new TestListener(this, 6),
+                'all':                       new TestListener(this, 7)
             };
 
             for(var key in listeners) {
@@ -164,15 +161,17 @@ describe('pubsub-hierarchy tests', function() {
                 for(var key in listeners) {
                     var listener = listeners[key];
 
-                    expect(listener.fireCount).toEqual(1);
-                    expect(listener.order).toEqual(listener.expectedOrder);
-                    expect(listener.lastEvent).toEqual(eventName);
-                    expect(listener.lastParams).toEqual(params[0]);
+                    expect(listener.fireCount).toNotEqual(0, 'fire count error - listener "' + key + '" never fired');
+                    expect(listener.fireCount).toEqual(1, 'unexpected fire count for listener "' + key + '"');
+                    expect(listener.order).toEqual(listener.expectedOrder, 'incorrect order for listener "' + key + '"');
+                    expect(listener.lastEvent).toEqual(eventName, 'incorrect published topic for listener "' + key + '"');
+                    expect(listener.lastParams).toEqual(params[0], 'incorrect event arguments for listener "' + key + '"');
                 }
 
-                expect(this.totalFireCount).toEqual(6);
+                expect(this.totalFireCount).toEqual(7, 'unexpected total fire count');
             });
         });
+
 
         it('can fire events in hierarchy: 4 levels', function() {
 
@@ -180,25 +179,28 @@ describe('pubsub-hierarchy tests', function() {
 
             this.totalFireCount = 0;
 
+            var orderedListenerTopics = [ // to listen for in expected order
+                'one.two.three.four',
+                'one.two.four',
+                'one.four',
+                'four',
+                'one.two.three',
+                'one.three',
+                'three',
+                'one.two',
+                'two',
+                'one',
+                'all'
+            ],
 
-            listeners = {
-                'one.two.three.four':  new TestListener(this, 1),
-                'one.two.four':        new TestListener(this, 2),
-                'one.four':            new TestListener(this, 3),
-                'four':                new TestListener(this, 4),
-                'one.two.three':       new TestListener(this, 5),
-                'one.three':           new TestListener(this, 6),
-                'three':               new TestListener(this, 7),
-                'one.two':             new TestListener(this, 8),
-                'two':                 new TestListener(this, 9),
-                'one':                 new TestListener(this, 10),
-                'all':                 new TestListener(this, 11)
-            };
+            listeners = {};
 
-            for(var key in listeners) {
-                var listener = listeners[key];
-                events.subscribe(key, listener.fire, listener);
+            for (var i = 0, listener, topic; (topic = orderedListenerTopics[i]); i++) {
+                listener = new TestListener(this, i + 1);
+                events.subscribe(topic, listener.fire, listener);
+                listeners[topic] = listener;
             }
+
 
             params = ['testParam1'];
             eventName = 'one.two.three.four';
@@ -218,9 +220,8 @@ describe('pubsub-hierarchy tests', function() {
                     expect(listener.lastParams).toEqual(params[0], 'incorrect event arguments for listener "' + key + '"');
                 }
 
-                expect(this.totalFireCount).toEqual(11, 'unexpected total fire count');
+                expect(this.totalFireCount).toEqual(orderedListenerTopics.length, 'unexpected total fire count');
 
-                console.log(events);
             });
         });
 
