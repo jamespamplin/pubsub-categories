@@ -15,6 +15,7 @@ describe('pubsub-hierarchy tests', function() {
         this.testRunner.totalFireCount++;
         this.order = this.testRunner.totalFireCount;
 
+        this.lastArgs = arguments;
         this.lastEvent = eventName;
         this.lastParams = params;
     };
@@ -22,11 +23,11 @@ describe('pubsub-hierarchy tests', function() {
 
     describe('global context', function() {
 
-        var publish = EventProvider.publish,
+        var publish = EventProvider.publish, // easy access aliases for Global pub/sub
         subscribe = EventProvider.subscribe;
 
 
-        it('can remove all listeners', function() {
+        it('can remove all listeners', function() { // tested first as used for test cleanup
             var fired = false;
 
             subscribe('testRemoveAll', function() {
@@ -49,6 +50,23 @@ describe('pubsub-hierarchy tests', function() {
         describe('publish single events', function() {
 
             it('can publish an event', function() {
+
+                var eventName = 'testEvent',
+                fired = false,
+                returned = -1; // set to something unexpected
+
+                subscribe(eventName, function() {
+                    fired = true;
+                });
+
+                returned = publish(eventName);
+
+                expect(returned).toBe(true, 'unexpected return type');
+                expect(fired).toBe(true, 'Event listener never fired');
+
+            });
+
+            it('can publish an event (new thread)', function() {
 
                 var eventName = 'testEvent',
                 fired = false,
@@ -99,39 +117,86 @@ describe('pubsub-hierarchy tests', function() {
 
                 var eventName = 'root.testEvent',
 
-                returns = EventProvider.publish(eventName);
+                returns = publish(eventName);
 
                 expect(returns).toBe(undefined);
 
             });
 
             it('can publish an event with multiple subscribers', function() {
+                var topic = 'testEvent',
+                value = 1;
 
+                subscribe(topic, function() { value += 2; });
+                subscribe(topic, function() { value += 3; });
+                subscribe(topic, function() { value = value / 2; });
+
+                publish(topic);
+
+                expect(value).toBe(3);
+
+                publish(topic);
+
+                expect(value).toBe(4);
             });
 
             it('can publish an event with multiple parameters', function() {
+                var topic = 'testMultiParam',
+                value = 1,
+
+                param1, param2, param3, paramLength;
+
+                subscribe(topic, function(x, y, z) {
+                    param1 = x;
+                    param2 = y;
+                    param3 = z;
+                    paramLength = arguments.length;
+
+                    value += x / y;
+                });
+
+                publish(topic, 4, 2);
+
+                expect(param1).toBe(4);
+                expect(param2).toBe(2);
+                expect(param3).toBe(topic);
+                expect(paramLength).toBe(3);
+                expect(value).toBe(3);
 
             });
 
             it('can stop event propagation', function() {
-                throw 'tests not yet implemented';
+                var topic = 'testStopPropagation',
+                value = 1;
+
+                subscribe(topic, function() { value += 2; return -1; }); // shouldn't stop as not === false
+                subscribe(topic, function() { value += 3; return false; }); // expect stop
+                subscribe(topic, function() { value /= 2; });
+
+                publish(topic);
+
+                expect(value).toBe(6);
+
+                publish(topic);
+
+                expect(value).toBe(11);
             });
 
             it('can subscribe once to an event', function() {
-                throw 'not yet implemented';
+                // TODO 'not yet implemented';
             });
 
         });
 
         describe('unsubscribe', function() {
-            // 'not yet implemented'
+            // TODO 'not yet implemented'
         });
 
 
 
         describe('publish hierarchial events in global context', function() {
 
-            it('can publish events in hierarchy: 2 levels', function() {
+            it('can publish events in hierarchy: 1 category level', function() {
 
                 this.totalFireCount = 0;
 
@@ -144,14 +209,14 @@ describe('pubsub-hierarchy tests', function() {
 
                 for(var key in listeners) {
                     var listener = listeners[key];
-                    EventProvider.subscribe(key, listener.fire, listener);
+                    subscribe(key, listener.fire, listener);
                 }
 
                 param = 'testParam1';
                 eventName = 'root.testEvent';
 
                 runs(function() {
-                    EventProvider.publish(eventName, param);
+                    publish(eventName, param);
                 });
 
                 runs(function() {
@@ -169,7 +234,7 @@ describe('pubsub-hierarchy tests', function() {
                 });
             });
 
-            it('can publish events in hierarchy: 3 levels', function() {
+            it('can publish events in hierarchy: 2 category levels', function() {
 
                 this.totalFireCount = 0;
 
@@ -185,14 +250,14 @@ describe('pubsub-hierarchy tests', function() {
 
                 for(var key in listeners) {
                     var listener = listeners[key];
-                    EventProvider.subscribe(key, listener.fire, listener);
+                    subscribe(key, listener.fire, listener);
                 }
 
                 params = ['testParam1'];
                 eventName = 'trunk.branch.leaf';
 
                 runs(function() {
-                    EventProvider.publish(eventName, 'testParam1');
+                    publish(eventName, 'testParam1');
                 });
 
                 runs(function() {
@@ -211,7 +276,7 @@ describe('pubsub-hierarchy tests', function() {
             });
 
 
-            it('can publish events in hierarchy: 4 levels', function() {
+            it('can publish events in hierarchy: 3 category levels', function() {
 
                 this.totalFireCount = 0;
 
@@ -233,16 +298,16 @@ describe('pubsub-hierarchy tests', function() {
 
                 for (var i = 0, listener, topic; (topic = orderedListenerTopics[i]); i++) {
                     listener = new TestListener(this, i + 1);
-                    EventProvider.subscribe(topic, listener.fire, listener);
+                    subscribe(topic, listener.fire, listener);
                     listeners[topic] = listener;
                 }
 
 
-                params = ['testParam1'];
+                param = 'testParam1';
                 eventName = 'one.two.three.four';
 
                 runs(function() {
-                    EventProvider.publish(eventName, 'testParam1');
+                    publish(eventName, param);
                 });
 
                 runs(function() {
@@ -253,11 +318,39 @@ describe('pubsub-hierarchy tests', function() {
                         expect(listener.fireCount).toEqual(1, 'unexpected fire count for listener "' + key + '"');
                         expect(listener.order).toEqual(listener.expectedOrder, 'incorrect order for listener "' + key + '"');
                         expect(listener.lastEvent).toEqual(eventName, 'incorrect published topic for listener "' + key + '"');
-                        expect(listener.lastParams).toEqual(params[0], 'incorrect event arguments for listener "' + key + '"');
+                        expect(listener.lastParams).toEqual(param, 'incorrect event arguments for listener "' + key + '"');
                     }
 
                     expect(this.totalFireCount).toEqual(orderedListenerTopics.length, 'unexpected total fire count');
 
+                });
+            });
+
+            it('can stop propagation when in hierarchy', function() {
+                var totalFireCount = 0,
+                topic = 'one.two.three.four',
+                value = 1,
+
+                listeners = { // to listen for in expected order
+                    'one.two.three.four': function() { value += 2; },
+                    'four': function() { value += 3; },
+                    'one.two.three': function() { value += 4; return false; }, // should stop here
+                    'one': function() { value += 5; }
+                };
+
+
+                for(var key in listeners) {
+                    var listener = listeners[key];
+                    subscribe(key, listener);
+                }
+
+
+                runs(function() {
+                    publish(topic);
+                });
+
+                runs(function() {
+                    expect(value).toBe(10);
                 });
             });
 
@@ -268,17 +361,14 @@ describe('pubsub-hierarchy tests', function() {
     describe('category contexts', function() {
 
 
-        it('can subscribe to all event', function() {
-            throw 'not yet implemented';
+        it('can subscribe to all event in context', function() {
+            //TODO: 'not yet implemented';
         });
 
         it('can subscribe to a context event', function() {
-            throw 'not yet implemented';
+            //TODO: 'not yet implemented';
         });
 
-        it('can subscribe to any event', function() {
-            throw 'not yet implemented';
-        });
     });
 
     describe('object contexts', function() {
