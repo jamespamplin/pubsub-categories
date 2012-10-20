@@ -1,7 +1,7 @@
 /**
  * @module pubsub-hierarchy
  *
- * publish / subcribe event model with hierarchy
+ * publish / subcribe event model with hierarchial topic categories.
  */
 
 /*global define:false */
@@ -10,25 +10,18 @@
 
     'use strict'; // TODO performance check
 
-    var SEPARATOR = '.';
-
+    var SEPARATOR = '.',
 
 
     // TODO: provide Contexts as views into event categories
 
-    var _listeners = {};
+    _listeners = {},
 
-    var Provider = function(category, parent) {
-        _listeners = {}; // todo remove
-    };
-
-
-
-    var tree = {},
+    _tree = {},
 
 
     getTreeBranches = function(topic) { // trunk.branch.leaf
-        var branches = tree[topic];
+        var branches = _tree[topic];
 
         if (branches === undefined) { // lazy cache / init
 
@@ -48,7 +41,7 @@
                 branches = [ category, nextCategoryForSuffix ];
             }
 
-            tree[topic] = branches;
+            _tree[topic] = branches;
         }
 
         return branches;
@@ -115,7 +108,7 @@
      * @returns result from listener call - false to stop propagation, true otherwise.
      */
     fireListener = function(listener, args) {
-        var context = Provider; // or provider context, or DOM Event where applicable?
+        var context = EventProvider; // or provider context / DOM Event where applicable?
 
         if (listener) {
             if (typeof(listener) !== 'function' && listener.context) {
@@ -125,16 +118,24 @@
 
             return listener.apply(context, args) !== false;
         }
-    };
+    },
 
-    Provider.prototype = {
 
-        _tree: tree,
-        _listeners: _listeners,
+
+    /**
+     * @exports pubsub-hierarchy
+     */
+    EventProvider = {
 
         /**
-         * Publishes an event by key, or composite events in an array with given parameters
+         * Publishes all listeners to an event by using a topic key.
          *
+         * Topics can be hierarchial, specifying categories using a "." (dot) separator. In this case,
+         * the topic will be fired for all parent categories specified, then finally firing the topic on its own.
+         *
+         * Multiple hierarchies are also supported. - TODO Document -
+         *
+         * @param {String} topic Name of event topic to publish.
          * @return true if an event listener was fired.
          */
         publish: function(topic) { // args[1..n] become event params
@@ -155,16 +156,33 @@
 
 
 
-
+        /**
+         * Subcribe to event topics with a listener callback function.
+         *
+         * Topics can be hierarchial, specifying categories using a "." (dot) separator. See {@link #publish}
+         * for details about how hierarchial listeners are published.
+         *
+         * The "all" topic can also be subscribed to, to listen to every single event published.
+         *
+         * @example
+         * subscribe('singleEvent');
+         * subscribe('category.event'); // hierarchial event
+         * subscribe('all'); // subscribes to every event fired
+         *
+         * @param {String} topic Name of event topic to listen to for published events.
+         * @param {Function} listener Callback receiver for when the event topic will publish.
+         * @param {Object} context Object context used as "this" accessor when listener is fired.
+         */
         subscribe: function(/* string */ topic, /* function */ listener, /* object */ context) {
 
             if (typeof(topic) == 'string' && typeof(listener) == 'function') {
+
+                var topicListeners = _listeners[topic];
 
                 if (context !== undefined) {
                     listener = { 'listener': listener, 'context': context };
                 }
 
-                var topicListeners = _listeners[topic];
 
                 if (topicListeners === undefined) {
                     _listeners[topic] = listener;
@@ -182,17 +200,32 @@
             return false;
         },
 
-        subscribeOnce: function() {
+        subscribeOnce: function(/* string */ topic, /* function */ listener, /* object */ context) {
             throw 'not yet implemented'; // needs unsubscribe first
         },
 
 
-        unsubscribe: function() {
+        unsubscribe: function(/* string */ topic, /* function */ listener) { // TODO: listener or listenerID
             throw 'not yet implemented';
         },
 
 
-        bind: function(/* Array | DOMElement */ elems, /*string */ topic) {
+        /**
+         * Remove all listeners associated with a topic.
+         * @param {String[all]} topic Specific topic to remove listeners. Can be "all" (default).
+         */
+        removeAll: function(/* string */ topic) {
+            if (!topic || topic == 'all') {
+                _listeners = {};
+                _tree = {};
+
+            } else {
+                throw 'not yet implemented';
+            }
+        },
+
+
+        bind: function(/* string */ topic, /* Array | DOMElement */ elems) {
             throw 'not yet implemented';
         }
 
@@ -201,11 +234,11 @@
 
     if(typeof define === 'function' && define.amd) {
         define(function() {
-            return Provider;
+            return EventProvider;
         });
     }
     else {
-        context.Provider = Provider;
+        context.EventProvider = EventProvider;
     }
 
 
