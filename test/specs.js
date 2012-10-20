@@ -194,7 +194,7 @@ describe('pubsub-hierarchy tests', function() {
 
 
 
-        describe('publish hierarchial events in global context', function() {
+        describe('publish hierarchical events in global context', function() {
 
             it('can publish events in hierarchy: 1 category level', function() {
 

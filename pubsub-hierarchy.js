@@ -1,7 +1,7 @@
 /**
  * @module pubsub-hierarchy
  *
- * publish / subcribe event model with hierarchial topic categories.
+ * publish / subscribe event model with hierarchical topic categories.
  */
 
 /*global define:false */
@@ -49,33 +49,38 @@
 
     publishRoot = function(topic, args) {
         var branches = getTreeBranches(topic),
-        returns;
 
-        if (branches) {
+        returns = fire(topic, args);
 
-            // fire(x => x[1])
-            returns = fireBranch(topic, function(x) { return x[1]; }, args);
+        if (returns !== false && branches) {
 
-            returns = returns !== false && publishRoot(branches[0], args);
-        } else {
-            returns = fire(topic, args);
+            returns = fireRightBranch(topic, args, branches); // fire all right hand branches
+
+            if (returns !== false) {
+
+                returns = publishRoot(branches[0], args); // fire category
+            }
         }
 
         return returns;
     },
 
-    // fire(x => x[1])
-    fireBranch = function(topic, /* function */ filter, args) {
-        var x = getTreeBranches(topic),
-        y = x && filter(x),
+    fireRightBranch = function(topic, args, branches) {
+        branches = branches || getTreeBranches(topic);
 
-        r = fire(topic, args);
+        var right = branches && branches[1],
+        returns;
 
-        if (r !== false && y) {
-            r = fireBranch(y, filter, args);
+        if (right) {
+            returns = fire(right, args);
+
+            if (returns !== false) {
+                returns = fireRightBranch(right, args);
+            }
         }
-        return r;
+        return returns;
     },
+
 
     /**
      * Fire topic
@@ -130,12 +135,27 @@
         /**
          * Publishes all listeners to an event by using a topic key.
          *
-         * Topics can be hierarchial, specifying categories using a "." (dot) separator. In this case,
-         * the topic will be fired for all parent categories specified, then finally firing the topic on its own.
+         * Topics can be hierarchical by specifying categories using a "." (dot) separator to
+         * the topic name, eg: "category.topic". When published, listeners subscribed to the full topic,
+         * the topic on its own and category on its own will be fired.
          *
-         * Multiple hierarchies are also supported. - TODO Document -
+         * Multiple hierarchies with as many sub-categories as you like are also supported. The more sub-categories,
+         * the more specific your event will be - listeners are fired from most specific to least.
+         *
+         * Finally, an "all" event will trigger when any event is published.
+         *
+         * For an example, the published topic: "category.subcategory.topic" will fire listeners in this order:
+         * 1. category.subcategory.topic
+         * 2. category.topic
+         * 3. topic
+         * 4. category.subcategory
+         * 5. subcategory
+         * 6. category
+         * 7. all
+         *
          *
          * @param {String} topic Name of event topic to publish.
+         * @param {...} all extra arguments will be passed to any subscribed listeners.
          * @return true if an event listener was fired.
          */
         publish: function(topic) { // args[1..n] become event params
@@ -157,23 +177,23 @@
 
 
         /**
-         * Subcribe to event topics with a listener callback function.
+         * Subscribe to event topics with a listener callback function.
          *
-         * Topics can be hierarchial, specifying categories using a "." (dot) separator. See {@link #publish}
-         * for details about how hierarchial listeners are published.
+         * Topics can be hierarchical, specifying categories using a "." (dot) separator. See {@link #publish}
+         * for details about how hierarchical listeners are published.
          *
          * The "all" topic can also be subscribed to, to listen to every single event published.
          *
          * @example
          * subscribe('singleEvent');
-         * subscribe('category.event'); // hierarchial event
+         * subscribe('category.event'); // hierarchical event
          * subscribe('all'); // subscribes to every event fired
          *
          * @param {String} topic Name of event topic to listen to for published events.
          * @param {Function} listener Callback receiver for when the event topic will publish.
          * @param {Object} context Object context used as "this" accessor when listener is fired.
          */
-        subscribe: function(/* string */ topic, /* function */ listener, /* object */ context) {
+        subscribe: function(/* String */ topic, /* Function */ listener, /* Object */ context) {
 
             if (typeof(topic) == 'string' && typeof(listener) == 'function') {
 
@@ -197,7 +217,6 @@
                 return true;
             }
 
-            return false;
         },
 
         subscribeOnce: function(/* string */ topic, /* function */ listener, /* object */ context) {
@@ -212,7 +231,7 @@
 
         /**
          * Remove all listeners associated with a topic.
-         * @param {String[all]} topic Specific topic to remove listeners. Can be "all" (default).
+         * @param {String} [topic=all] Specific topic to remove listeners. Can be "all" (default).
          */
         removeAll: function(/* string */ topic) {
             if (!topic || topic == 'all') {
