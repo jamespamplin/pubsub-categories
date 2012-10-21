@@ -4,7 +4,7 @@
  * publish / subscribe event model with hierarchical topic categories.
  */
 
-/*global define:false */
+/*global define:false,module:false */
 
 (function(context) {
 
@@ -255,8 +255,10 @@
         define(function() {
             return EventProvider;
         });
-    }
-    else {
+    } else if (typeof module === 'object' && module.exports) {
+        module.exports = EventProvider;
+
+    } else {
         context.EventProvider = EventProvider;
     }
 
