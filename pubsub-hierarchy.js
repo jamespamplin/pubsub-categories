@@ -219,22 +219,15 @@
 
         },
 
+
+
         subscribeOnce: function(/* string */ topic, /* function */ listener, /* object */ context) {
             throw 'not yet implemented'; // needs unsubscribe first
         },
 
 
-        unsubscribe: function(/* string */ topic, /* function */ listener) { // TODO: listener or listenerID
-            throw 'not yet implemented';
-        },
-
-
-        /**
-         * Remove all listeners associated with a topic.
-         * @param {String} [topic=all] Specific topic to remove listeners. Can be "all" (default).
-         */
-        removeAll: function(/* string */ topic) {
-            if (!topic || topic == 'all') {
+        unsubscribe: function(/* string */ topic, /* function|string */ listener) { // TODO: listener or listenerID
+            if (topic == 'all') {
                 _listeners = {};
                 _tree = {};
 

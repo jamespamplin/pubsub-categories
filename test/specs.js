@@ -27,23 +27,23 @@ describe('pubsub-hierarchy tests', function() {
         subscribe = EventProvider.subscribe;
 
 
-        it('can remove all listeners', function() { // tested first as used for test cleanup
+        it('can unsubscribe all listeners', function() { // tested first as used for test cleanup
             var fired = false;
 
-            subscribe('testRemoveAll', function() {
+            subscribe('testUnsubscribeAll', function() {
                 fired = true;
             });
 
-            EventProvider.removeAll();
+            EventProvider.unsubscribe('all');
 
-            publish('testRemoveAll');
+            publish('testUnsubscribeAll');
 
             expect(fired).toBe(false);
         });
 
 
         beforeEach(function() {
-            EventProvider.removeAll(); // reset global event provider
+            EventProvider.unsubscribe('all'); // reset global event provider
         });
 
 
