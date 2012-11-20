@@ -3,6 +3,7 @@
 describe('pubsub-hierarchy tests', function() {
 
     var EventProvider = window.EventProvider, // Local closure capture, incase of name change
+    PubSub = window.EventProvider,
 
     TestListener = function(testRunner, order) {
         this.fireCount = 0;
@@ -20,6 +21,9 @@ describe('pubsub-hierarchy tests', function() {
         this.lastParams = params;
     };
 
+    beforeEach(function() {
+        EventProvider.unsubscribe('all'); // reset global event provider
+    });
 
     describe('global context', function() {
 
@@ -42,9 +46,7 @@ describe('pubsub-hierarchy tests', function() {
         });
 
 
-        beforeEach(function() {
-            EventProvider.unsubscribe('all'); // reset global event provider
-        });
+
 
 
         describe('publish single events', function() {
@@ -360,19 +362,104 @@ describe('pubsub-hierarchy tests', function() {
 
     describe('category contexts', function() {
 
+        it('can publish a context event', function() {
+            var category = 'testCategory',
+            context = new PubSub(category);
+            topic = 'testTopic',
 
-        it('can subscribe to all event in context', function() {
-            //TODO: 'not yet implemented';
+            topicInCategoryFired = false,
+            categoryFired = false,
+            topicFired = false,
+            allFired = false;
+
+            context.subscribe(topic, function() { topicInCategoryFired = true; });
+            PubSub.subscribe(topic, function() { topicFired = true; });
+            PubSub.subscribe(category, function() { categoryFired = true; });
+            PubSub.subscribe('all', function() { allFired = true; });
+
+            context.publish('topic');
+
+            expect(topicInCategoryFired).toBe(true, 'topicInCategoryFired incorrect');
+            expect(topicFired).toBe(true, 'topicFired incorrect');
+            expect(categoryFired).toBe(true, 'categoryFired incorrect');
+            expect(allFired).toBe(true, 'allFired incorrect');
         });
 
-        it('can subscribe to a context event', function() {
-            //TODO: 'not yet implemented';
-        });
+        it('can subscribe to all event in context');
 
     });
 
     describe('object contexts', function() {
 
+        it('can attach pubsub methods to object constructor', function() {
+            var category = 'MyObject',
+            topic = 'testTopic',
+
+            topicInContextFired = false,
+            categoryFired = false,
+            topicFired = false,
+            allFired = false;
+
+            MyObject = function() {}; // constructor
+            MyObject.prototype.testFn = function() {};
+
+            new PubSub(category, MyObject);
+
+            expect(typeof(MyObject.publish)).toBe('function');
+            expect(typeof(MyObject.subscribe)).toBe('function');
+
+            MyObject.subscribe(topic, function() { topicInContextFired = true; });
+            PubSub.subscribe(topic, function() { topicFired = true; });
+            PubSub.subscribe(category, function() { categoryFired = true; });
+            PubSub.subscribe('all', function() { allFired = true; });
+
+            MyObject.publish(topic);
+
+            expect(topicInContextFired).toBe(true, 'topicInContextFired incorrect');
+            expect(topicFired).toBe(true, 'topicFired incorrect');
+            expect(categoryFired).toBe(true, 'categoryFired incorrect');
+            expect(allFired).toBe(true, 'allFired incorrect');
+        });
+
+        it('can attach pubsub methods to object instances', function() {
+            var category = 'MyInstanceObjectTests',
+            topic = 'testTopic',
+
+            topicInInstanceFired = false,
+            topicInContextFired = false,
+            categoryFired = false,
+            topicFired = false,
+            allFired = false;
+
+            MyObject = function() {}; // constructor
+            MyObject.prototype.testFn = function() {};
+
+            new PubSub(category, MyObject);
+
+            var instance1 = new MyObject();
+
+            instance1.subscribe(topic, function() { topicInInstanceFired = true; });
+            MyObject.subscribe(topic, function() { topicInContextFired = true; });
+            PubSub.subscribe(topic, function() { topicFired = true; });
+            PubSub.subscribe(category, function() { categoryFired = true; });
+            PubSub.subscribe('all', function() { allFired = true; });
+
+            instance1.publish(topic);
+
+            expect(topicInInstanceFired).toBe(true, 'topicInInstanceFired incorrect');
+            expect(topicInContextFired).toBe(true, 'topicInContextFired incorrect');
+            expect(topicFired).toBe(true, 'topicFired incorrect');
+            expect(categoryFired).toBe(true, 'categoryFired incorrect');
+            expect(allFired).toBe(true, 'allFired incorrect');
+        });
+
+        it('can attach event namespace to objects');
+    });
+
+    describe('private contexts', function() {
+        it('can create a private context');
+
+        it('can not fire global events');
     });
 
 });
