@@ -2,8 +2,8 @@
 
 describe('pubsub-hierarchy tests', function() {
 
-    var EventProvider = window.EventProvider, // Local closure capture, incase of name change
-    PubSub = window.EventProvider,
+    var PubSub = window.PubSub, // Local closure capture, incase of name change
+    EventProvider = PubSub,
 
     TestListener = function(testRunner, order) {
         this.fireCount = 0;
@@ -364,7 +364,7 @@ describe('pubsub-hierarchy tests', function() {
 
         it('can publish a context event', function() {
             var category = 'testCategory',
-            context = new PubSub(category);
+            context = PubSub.context(category);
             topic = 'testTopic',
 
             topicInCategoryFired = false,
@@ -377,7 +377,7 @@ describe('pubsub-hierarchy tests', function() {
             PubSub.subscribe(category, function() { categoryFired = true; });
             PubSub.subscribe('all', function() { allFired = true; });
 
-            context.publish('topic');
+            context.publish(topic);
 
             expect(topicInCategoryFired).toBe(true, 'topicInCategoryFired incorrect');
             expect(topicFired).toBe(true, 'topicFired incorrect');
@@ -385,7 +385,7 @@ describe('pubsub-hierarchy tests', function() {
             expect(allFired).toBe(true, 'allFired incorrect');
         });
 
-        it('can subscribe to all event in context');
+        xit('can subscribe to all event in context');
 
     });
 
@@ -403,7 +403,7 @@ describe('pubsub-hierarchy tests', function() {
             MyObject = function() {}; // constructor
             MyObject.prototype.testFn = function() {};
 
-            new PubSub(category, MyObject);
+            var ctx = PubSub.context(category, MyObject);
 
             expect(typeof(MyObject.publish)).toBe('function');
             expect(typeof(MyObject.subscribe)).toBe('function');
@@ -431,10 +431,10 @@ describe('pubsub-hierarchy tests', function() {
             topicFired = false,
             allFired = false;
 
-            MyObject = function() {}; // constructor
+            MyObject = function() { this.testInst = 'test'; }; // constructor
             MyObject.prototype.testFn = function() {};
 
-            new PubSub(category, MyObject);
+            var ctx = PubSub.context(category, MyObject);
 
             var instance1 = new MyObject();
 
@@ -453,10 +453,10 @@ describe('pubsub-hierarchy tests', function() {
             expect(allFired).toBe(true, 'allFired incorrect');
         });
 
-        it('can attach event namespace to objects');
+        xit('can attach event namespace to objects');
     });
 
-    describe('private contexts', function() {
+    xdescribe('private contexts', function() {
         it('can create a private context');
 
         it('can not fire global events');

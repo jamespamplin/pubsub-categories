@@ -63,7 +63,7 @@ TODO: make this better
 ```javascript
 var PubSub = require('pubsub-hierarchy');
 
-var context = new PubSub.context('fruits');
+var context = PubSub.context('fruits');
 
 context.publish('apples');
 // console.log: "fruits.apples"
@@ -99,7 +99,7 @@ We can extend its function prototype with its own PubSub event context:
 ```javascript
 var PubSub = require('pubsub-hierarchy');
 
-new PubSub.context('MyWidgetEvents', MyWidget);
+PubSub.context('MyWidgetEvents', MyWidget);
 ```
 
 This provides access to `publish()`, `subscribe()` and all other PubSub functions to every MyWidget instance.
@@ -177,5 +177,5 @@ Instance `id`'s are appended to the topic name.
 
 ```javascript
 // Method signature planning:
-PubSub.context = function(category, objectDefinition, namespace, idKey);
+PubSub.context = function(category, objectContext, namespace, idKey);
 ```
