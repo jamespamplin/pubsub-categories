@@ -17,7 +17,7 @@
 
     wrapFunctions = function(source, target) {
         var copier = function(method) {
-            target[method] = function() { return source[method].apply(source, arguments); };
+            target[method] = function() { return source[method].apply(this, arguments); };
         }, method;
 
         for (method in source) {
@@ -60,32 +60,32 @@
             return branches;
         },
 
-        publishRoot = function(topic, args) {
+        publishRoot = function(topic, args, context) {
             var branches = getTreeBranches(topic),
 
-            returns = fire(topic, args);
+            returns = fire(topic, args, context);
 
             if (returns !== false && branches) {
 
-                returns = fireRightBranch(topic, args, branches); // fire all right hand branches
+                returns = fireRightBranch(topic, args, branches, context); // fire all right hand branches
 
                 if (returns !== false) {
 
-                    returns = publishRoot(branches[0], args); // fire category
+                    returns = publishRoot(branches[0], args, context); // fire category
                 }
             }
 
             return returns;
         },
 
-        fireRightBranch = function(topic, args, branches) {
+        fireRightBranch = function(topic, args, branches, context) {
             branches = branches || getTreeBranches(topic);
 
             var right = branches && branches[1],
             returns;
 
             if (right) {
-                returns = fire(right, args);
+                returns = fire(right, args, context);
 
                 if (returns !== false) {
                     returns = fireRightBranch(right, args);
@@ -100,7 +100,7 @@
          * @param {String} topic
          * @returns {Boolean} true when a listener fired, false to stop propagation.
          */
-        fire = function(topic, args) {
+        fire = function(topic, args, context) {
             var returns,
             topicListeners = _listeners[topic];
 
@@ -109,11 +109,11 @@
                 for (var i = 0, listener; returns !== false && (listener = topicListeners[i]); i++) {
 
                     // TODO: should try / catch around event?
-                    returns = fireListener(listener, args);
+                    returns = fireListener(listener, args, context);
                 }
 
             } else {
-                returns = fireListener(topicListeners, args);
+                returns = fireListener(topicListeners, args, context);
             }
 
             return returns;
@@ -125,8 +125,8 @@
          * @param {Function} listener
          * @returns result from listener call - false to stop propagation, true otherwise.
          */
-        fireListener = function(listener, args) {
-            var context = PubSub; // or provider context / DOM Event where applicable?
+        fireListener = function(listener, args, context) {
+            context = context || undefined;
 
             if (listener) {
                 if (typeof(listener) !== 'function' && listener.context) {
@@ -143,7 +143,14 @@
 
 
 
-        PubSubContext = function(category, objectContext) {
+        PubSubContext = function(category, objectContext, idKey) {
+
+            var self = this,
+
+            getCategoryPrefix = function() {
+                var id = objectContext && this && !this.prototype && this[idKey] || '';
+                return category && category + (id && SEPARATOR + id || '') + SEPARATOR || '';
+            };
 
             /**
              * Publishes all listeners to an event by using a topic key.
@@ -175,18 +182,19 @@
 
                 var returns, args = Array.prototype.slice.call(arguments);
 
-                topic = category && category + SEPARATOR + topic || topic;
+                topic = getCategoryPrefix.call(this) + topic;
 
                 if (arguments.length > 1) {
                     args.shift();
                     args.push(topic);
                 }
 
+
                 // TODO: normalise 'all' so that it's either on its own, or not present
 
-                returns = publishRoot(topic, args);
+                returns = publishRoot(topic, args, this);
 
-                return fire('all', args) || returns;
+                return fire('all', args, this) || returns;
             };
 
 
@@ -213,8 +221,9 @@
 
                 if (typeof(topic) == 'string' && typeof(listener) == 'function') {
 
-                    topic = category && category + SEPARATOR + topic || topic;
-                    context = context || objectContext || this;
+                    topic = getCategoryPrefix.call(this) + topic;
+
+                    // context = context || this || objectContext || self;
 
                     var topicListeners = _listeners[topic];
 
@@ -260,8 +269,26 @@
         PubSubContext.call(this);
 
 
-        var createContext = function(category, objectContext, namespace, idKey) {
-            var ctx = new PubSubContext(category, objectContext);
+        /**
+         * Creates a Category PubSub context.
+         *
+         * All topics published from a context will be prefixed with the category.
+         *
+         * Contexts can be attached to objects, allowing publish and subscribe methods to
+         * be accessed directly on the object.
+         *
+         * Object instances via new will also inherit publish and subscribe via its prototype.
+         * The "id" property of the instance will be appended to the category name when events
+         * are published on the instance.
+         *
+         * @param  {string} category      The name of the category to prepend to each topic published / subscribed.
+         * @param  {function|object} objectContext The object or function contructor to append context.
+         * @param  {string|false} namespace Inject context into object under a namespace, instead of directly.
+         * @param  {string} idKey         The property key to use for instance id's, defaults to "id".
+         * @return {object}               Context created with access to publish / subscribe methods.
+         */
+        this.context = function(category, objectContext, namespace, idKey) {
+            var ctx = new PubSubContext(category, objectContext, idKey || 'id');
 
             if (objectContext) {
                 if (namespace) {
@@ -269,35 +296,13 @@
 
                 } else {
                     wrapFunctions(ctx, objectContext);
-                    // wrap object ctx methods
-                    // TODO: handle function instances via prototype constructor
 
-                    /*if (typeof(objectContext == 'function') && objectContext.prototype) {
-                        var origConstructor = objectContext.prototype.constructor,
-
-                        instanceCount = 0;
-
-                        idKey = idKey || 'id';
-
-
-                        objectContext.prototype.constructor = function() {throw 'yo';
-                            console.log('constructor called1');
-                            origConstructor.apply(this, arguments);
-                            console.log('constructor called');
-
-                            var id = this[idKey] || instanceCount;
-                            instanceCount++;
-
-                            createContext(category + SEPARATOR + id, this, namespace, idKey);
-                        };
-                    }*/
+                    objectContext.prototype && wrapFunctions(ctx, objectContext.prototype);
                 }
             }
 
             return ctx;
         };
-
-        this.context = createContext;
 
     };
 
