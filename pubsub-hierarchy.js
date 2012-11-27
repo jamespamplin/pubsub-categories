@@ -10,24 +10,9 @@
 
     'use strict'; // TODO performance check
 
-    var SEPARATOR = '.',
+    var PubSub = function(SEPARATOR) {
+        SEPARATOR = SEPARATOR || '.';
 
-
-    // PubSub.publish = function() { return GlobalContext.publish.apply(GlobalContext, arguments); };
-
-    wrapFunctions = function(source, target) {
-        var copier = function(method) {
-            target[method] = function() { return source[method].apply(this, arguments); };
-        }, method;
-
-        for (method in source) {
-            if (typeof(source[method]) == 'function') {
-                copier(method);
-            }
-        }
-    },
-
-    PubSub = function() {
         var _listeners = {},
 
         _tree = {},
@@ -295,25 +280,28 @@
                     objectContext[namespace] = ctx;
 
                 } else {
-                    wrapFunctions(ctx, objectContext);
+                    copyFunctions(ctx, objectContext);
 
-                    objectContext.prototype && wrapFunctions(ctx, objectContext.prototype);
+                    objectContext.prototype && copyFunctions(ctx, objectContext.prototype);
                 }
             }
 
             return ctx;
         };
 
-    };
+    },
 
+    copyFunctions = function(source, target) {
+        for (var method in source) {
+            if (typeof(source[method]) == 'function') {
+                target[method] = source[method];
+            }
+        }
+    },
 
-    var GlobalContext = new PubSub();
+    GlobalContext = new PubSub();
 
-    wrapFunctions(GlobalContext, PubSub);
-
-    // PubSub.publish = function() { return GlobalContext.publish.apply(GlobalContext, arguments); };
-    // PubSub.subscribe = function() { return GlobalContext.subscribe.apply(GlobalContext, arguments); };
-    // PubSub.unsubscribe = function() { return GlobalContext.unsubscribe.apply(GlobalContext, arguments); };
+    copyFunctions(GlobalContext, PubSub);
 
 
     if(typeof define === 'function' && define.amd) {

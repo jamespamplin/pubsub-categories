@@ -492,10 +492,67 @@ describe('pubsub-hierarchy tests', function() {
         xit('can attach event namespace to objects');
     });
 
-    xdescribe('private contexts', function() {
-        it('can create a private context');
+    describe('private contexts', function() {
+        it('can create a private context', function() {
+            expect(typeof(PubSub)).toBe('function');
 
-        it('can not fire global events');
+            var privateContext = new PubSub();
+
+            expect(typeof(privateContext.publish)).toBe('function');
+            expect(typeof(privateContext.subscribe)).toBe('function');
+        });
+
+        it('can not fire global events', function() {
+            var privateContext = new PubSub(),
+
+            topic = 'testPrivateTopic',
+
+            topicFired = false;
+
+            privateContext.subscribe(topic, function() { topicFired = true; });
+
+            PubSub.subscribe(topic, function() { throw 'Global topic fired unexpectedly'; });
+
+            privateContext.publish(topic);
+
+            expect(topicFired).toBe(true, 'topic did not fire in private context');
+
+        });
+
+        it('can not respond to global events', function() {
+            var privateContext = new PubSub(),
+
+            topic = 'testGlobalTopic',
+
+            topicFired = false;
+
+            privateContext.subscribe(topic, function() { throw 'Private topic fired unexpectedly'; });
+
+            PubSub.subscribe(topic, function() { topicFired = true; });
+
+            PubSub.publish(topic);
+
+            expect(topicFired).toBe(true, 'topic did not fire in global context');
+        });
+
+        it('can change category separator', function() {
+            var eventContext = new PubSub('|');
+
+            topic = 'testTopic',
+            category = 'testCategory',
+
+            categoryFired = false;
+
+            eventContext.subscribe(category, function() { categoryFired = true; });
+
+            eventContext.publish(category + '.' + topic);
+
+            expect(categoryFired).toBe(false);
+
+            eventContext.publish(category + '|' + topic);
+
+            expect(categoryFired).toBe(true);
+        });
     });
 
 });
