@@ -1,9 +1,9 @@
-pubsub-hierarchy
+pubsub-categories
 ================
-A JavaScript Publish / Subscribe event model with hierarchical categories for event topics.
+A JavaScript Publish / Subscribe custom event model with hierarchical categories for event topics.
 
 Loosely coupled event logic.
-Reduce code by listening to event categories.
+Reduce code by listening to categories of event topics.
 
 Features
 --------
@@ -61,7 +61,7 @@ Learn by example:
 ### Fruits category example
 TODO: make this better
 ```javascript
-var PubSub = require('pubsub-hierarchy');
+var PubSub = require('pubsub-categories');
 
 var context = PubSub.context('fruits');
 
@@ -97,7 +97,7 @@ MyWidget.prototype = {
 We can extend its function prototype with its own PubSub event context:
 
 ```javascript
-var PubSub = require('pubsub-hierarchy');
+var PubSub = require('pubsub-categories');
 
 PubSub.context('MyWidgetEvents', MyWidget);
 ```
