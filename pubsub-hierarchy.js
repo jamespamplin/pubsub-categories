@@ -169,11 +169,8 @@
 
                 topic = getCategoryPrefix.call(this) + topic;
 
-                if (arguments.length > 1) {
-                    args.shift();
-                    args.push(topic);
-                }
-
+                args.shift();
+                args.push(topic);
 
                 // TODO: normalise 'all' so that it's either on its own, or not present
 

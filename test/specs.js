@@ -5,6 +5,35 @@ describe('pubsub-hierarchy tests', function() {
     var PubSub = window.PubSub, // Local closure capture, incase of name change
     EventProvider = PubSub,
 
+
+    createTestListener = function(topic, testRunner, expectedProperties) {
+
+        if (isNaN(testRunner.totalFireCount)) { testRunner.totalFireCount = 0; }
+
+        var listener = function() {
+            testRunner.totalFireCount++;
+
+            listener.fireCount++;
+            listener.order = testRunner.totalFireCount;
+
+            listener.args = arguments;
+            listener.params = Array.prototype.slice.call(arguments, 0, arguments.length - 1);
+            listener.context = this;
+            listener.topic = arguments[arguments.length - 1];
+
+            if (expectedProperties) {
+                for (var prop in expectedProperties) { // need toEqual / toBe?
+                    expect(listener[prop]).toEqual(expectedProperties[prop], 'Unexpected "' + prop + '" for fired listener on topic "' + topic + '"');
+                }
+            }
+        };
+
+        listener.fireCount = 0;
+
+        return listener;
+    },
+
+
     TestListener = function(testRunner, order) {
         this.fireCount = 0;
         this.testRunner = testRunner;
@@ -366,23 +395,17 @@ describe('pubsub-hierarchy tests', function() {
             var category = 'testCategory',
             context = PubSub.context(category);
             topic = 'testTopic',
+            categoryDotTopic = category + '.' + topic;
 
-            topicInCategoryFired = false,
-            categoryFired = false,
-            topicFired = false,
-            allFired = false;
 
-            context.subscribe(topic, function() { topicInCategoryFired = true; });
-            PubSub.subscribe(topic, function() { topicFired = true; });
-            PubSub.subscribe(category, function() { categoryFired = true; });
-            PubSub.subscribe('all', function() { allFired = true; });
+            context.subscribe(topic, createTestListener(topic, this, { topic: categoryDotTopic }));
+            PubSub.subscribe(topic, createTestListener(topic, this, { topic: categoryDotTopic }));
+            PubSub.subscribe(category, createTestListener(topic, this, { topic: categoryDotTopic }));
+            PubSub.subscribe('all', createTestListener(topic, this, { topic: categoryDotTopic }));
 
             context.publish(topic);
 
-            expect(topicInCategoryFired).toBe(true, 'topicInCategoryFired incorrect');
-            expect(topicFired).toBe(true, 'topicFired incorrect');
-            expect(categoryFired).toBe(true, 'categoryFired incorrect');
-            expect(allFired).toBe(true, 'allFired incorrect');
+            expect(this.totalFireCount).toBe(4);
         });
 
         xit('can subscribe to all event in context');
@@ -394,11 +417,8 @@ describe('pubsub-hierarchy tests', function() {
         it('can attach pubsub methods to object constructor', function() {
             var category = 'MyObject',
             topic = 'testTopic',
+            categoryDotTopic = category + '.' + topic,
 
-            topicInContextFired = false,
-            categoryFired = false,
-            topicFired = false,
-            allFired = false;
 
             MyObject = function() {}; // constructor
             MyObject.prototype.testFn = function() {};
@@ -408,17 +428,15 @@ describe('pubsub-hierarchy tests', function() {
             expect(typeof(MyObject.publish)).toBe('function');
             expect(typeof(MyObject.subscribe)).toBe('function');
 
-            MyObject.subscribe(topic, function() { topicInContextFired = true; });
-            PubSub.subscribe(topic, function() { topicFired = true; });
-            PubSub.subscribe(category, function() { categoryFired = true; });
-            PubSub.subscribe('all', function() { allFired = true; });
+            MyObject.subscribe(topic, createTestListener(topic, this, { topic: categoryDotTopic }));
+            PubSub.subscribe(topic, createTestListener(topic, this, { topic: categoryDotTopic }));
+            PubSub.subscribe(category, createTestListener(topic, this, { topic: categoryDotTopic }));
+            PubSub.subscribe('all', createTestListener(topic, this, { topic: categoryDotTopic }));
 
             MyObject.publish(topic);
 
-            expect(topicInContextFired).toBe(true, 'topicInContextFired incorrect');
-            expect(topicFired).toBe(true, 'topicFired incorrect');
-            expect(categoryFired).toBe(true, 'categoryFired incorrect');
-            expect(allFired).toBe(true, 'allFired incorrect');
+
+            expect(this.totalFireCount).toBe(4, 'Unexpected fire count');
         });
 
         it('can attach pubsub methods to object instances with "id"s', function() {
@@ -429,43 +447,60 @@ describe('pubsub-hierarchy tests', function() {
             instanceId = 'testID',
             categoryDotInstanceDotTopic = category + '.' + instanceId + '.' + topic,
 
-            topicInInstanceFired = false,
-            topicInContextFired = false,
-            categoryFired = false,
-            topicFired = false,
-            categoryDotTopicFired = false,
-            categoryDotInstanceDotTopicFired = false,
-            allFired = false,
-
             // Class def
             MyObject = function(id) { this.id = id; this.testInst = 'test'; }; // constructor
             MyObject.prototype.testFn = function() {};
 
             // Create Context
-            var ctx = PubSub.context(category, MyObject);
+            var ctx = PubSub.context(category, MyObject),
 
-            var instance1 = new MyObject(instanceId);
+            instance1 = new MyObject(instanceId);
 
             expect(typeof(instance1.publish)).toBe('function');
             expect(typeof(instance1.subscribe)).toBe('function');
 
-            instance1.subscribe(topic, function() { topicInInstanceFired = true; });
-            MyObject.subscribe(topic, function() { topicInContextFired = true; });
-            PubSub.subscribe(topic, function() { topicFired = true; });
-            PubSub.subscribe(category, function() { categoryFired = true; });
-            PubSub.subscribe(categoryDotTopic, function() { categoryDotTopicFired = true; });
-            PubSub.subscribe(categoryDotInstanceDotTopic, function() { categoryDotInstanceDotTopicFired = true; });
-            PubSub.subscribe('all', function() { allFired = true; });
+            instance1.subscribe(topic, createTestListener(topic, this, { topic: categoryDotInstanceDotTopic }));
+            MyObject.subscribe(topic,  createTestListener(topic, this, { topic: categoryDotInstanceDotTopic }));
+            PubSub.subscribe(topic,    createTestListener(topic, this, { topic: categoryDotInstanceDotTopic }));
+            PubSub.subscribe(category, createTestListener(topic, this, { topic: categoryDotInstanceDotTopic }));
+            PubSub.subscribe(categoryDotTopic, createTestListener(topic, this, { topic: categoryDotInstanceDotTopic }));
+            PubSub.subscribe(categoryDotInstanceDotTopic, createTestListener(topic, this, { topic: categoryDotInstanceDotTopic }));
+            PubSub.subscribe('all', createTestListener(topic, this, { topic: categoryDotInstanceDotTopic }));
 
             instance1.publish(topic);
 
-            expect(topicInInstanceFired).toBe(true, 'topicInInstanceFired incorrect');
-            expect(topicInContextFired).toBe(true, 'topicInContextFired incorrect');
-            expect(topicFired).toBe(true, 'topicFired incorrect');
-            expect(categoryFired).toBe(true, 'categoryFired incorrect');
-            expect(categoryDotTopicFired).toBe(true, 'categoryDotTopicFired incorrect');
-            expect(categoryDotInstanceDotTopicFired).toBe(true, 'categoryDotInstanceDotTopicFired incorrect');
-            expect(allFired).toBe(true, 'allFired incorrect');
+            expect(this.totalFireCount).toBe(7, 'Unexpected fire count');
+        });
+
+        it('can attach pubsub methods to object instances without "id"s', function() {
+            var category = 'MyInstanceObjectTests',
+            topic = 'testTopic',
+            categoryDotTopic = category + '.' + topic,
+
+            // Class def
+            MyObject = function() { this.testInst = 'test'; }; // constructor
+            MyObject.prototype.testFn = function() {};
+
+            // Create Context
+            var ctx = PubSub.context(category, MyObject),
+
+            myInstance = new MyObject();
+
+            myInstance.subscribe(topic, function(topicName) {
+                topicInInstanceFired = true;
+                expect(topicName).toBe(categoryDotTopic);
+            });
+
+            MyObject.subscribe(topic,          createTestListener(topic, this, { order: 1, topic: categoryDotTopic }));
+            PubSub.subscribe(topic,            createTestListener(topic, this, { order: 3, topic: categoryDotTopic }));
+            PubSub.subscribe(category,         createTestListener(category, this, { order: 4, topic: categoryDotTopic }));
+            PubSub.subscribe('all',            createTestListener('all', this, { order: 5, topic: categoryDotTopic }));
+
+            PubSub.subscribe(categoryDotTopic, createTestListener(topic, this, { order: 2, topic: categoryDotTopic }));
+
+            myInstance.publish(topic);
+
+            expect(this.totalFireCount).toBe(5, 'Unexpected fire count');
         });
 
         it('can use instance as "this" in subscribers', function() {
