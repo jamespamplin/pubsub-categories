@@ -524,7 +524,29 @@ describe('pubsub-hierarchy tests', function() {
             expect(topicFired).toBe(true, 'topic did not publish');
         });
 
-        xit('can attach event namespace to objects');
+        it('can attach event namespace to objects', function() {
+            var MyObject = function(id) { this.id = id; },
+
+            namespace = 'events',
+
+            ctx = PubSub.context('testCategory', MyObject, namespace),
+
+            myInstance = new MyObject('tester');
+
+            expect(typeof(MyObject[namespace])).toBe('object');
+            expect(typeof(myInstance[namespace])).toBe('object');
+            expect(typeof(MyObject[namespace].publish)).toBe('function');
+            expect(typeof(MyObject[namespace].subscribe)).toBe('function');
+            expect(typeof(myInstance[namespace].publish)).toBe('function');
+            expect(typeof(myInstance[namespace].subscribe)).toBe('function');
+
+            expect(MyObject.publish).toBe(undefined);
+            expect(MyObject.subscribe).toBe(undefined);
+            expect(myInstance.publish).toBe(undefined);
+            expect(myInstance.subscribe).toBe(undefined);
+
+            // note: "this" in listener will no longer be instance, bug?
+        });
     });
 
     describe('private contexts', function() {

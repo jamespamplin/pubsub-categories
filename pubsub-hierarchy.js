@@ -275,6 +275,7 @@
             if (objectContext) {
                 if (namespace) {
                     objectContext[namespace] = ctx;
+                    if (objectContext.prototype) { objectContext.prototype[namespace] = ctx; }
 
                 } else {
                     copyFunctions(ctx, objectContext);
