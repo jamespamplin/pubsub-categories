@@ -6,7 +6,7 @@
 
 /*global define:false,module:false */
 
-(function(context) {
+(function(global) {
 
     'use strict'; // TODO performance check
 
@@ -310,8 +310,8 @@
         module.exports = PubSub;
 
     } else {
-        context.PubSub = PubSub;
+        global.PubSub = PubSub;
     }
 
 
-})(this);
+})(global);

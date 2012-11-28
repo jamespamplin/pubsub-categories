@@ -2,8 +2,17 @@ pubsub-categories
 ================
 A JavaScript Publish / Subscribe custom event model with hierarchical categories for event topics.
 
-Loosely coupled event logic.
-Reduce code by listening to categories of event topics.
+Loosely coupled event logic. Reduce code by listening to categories of event topics.
+
+```javascript
+PubSub.subscribe('myCategory', function() { console.log('myCategory'); });
+PubSub.subscribe('myTopic', function() { console.log('myTopic'); });
+
+PubSub.publish('myCategory.myTopic');
+
+// console.log: "myTopic"
+// console.log: "myCategory"
+```
 
 Features
 --------
@@ -12,63 +21,88 @@ Features
 - Catch "all" to listen to every published event.
 - Specifiable Listener callback context for "this".
 - Stop event propagation by returning false.
+- Category event contexts.
+- Category contexts for objects.
+- Private event contexts.
 
 ### Upcoming:
 - Unsubscribe single listeners.
 - Subscribe once to an event.
-- Category event contexts - automatically specify category.
-- Subscribe to DOM events on elements.
 - Minified build
 
-Use cases
----------
+
+
+Usage
+-----
+RequireJS:
+
+```javascript
+require(['pubsub-categories'], function(PubSub) {
+	// PubSub.publish() ...
+});
+```
+
+Script tag:
+```html
+<head>
+	<script type="text/javascript" src="pubsub-categories.js"></script>
+	<script type="text/javascript">
+		// PubSub.publish()
+	</script>
+</head>
+```
+
+
+
+Examples
+--------
+Learn by example...
+
 ### Widget states
 Use a single listener to handle data change states.
 
-	subscribe('changed'); // Persist data
-	subscribe('button'); // Redraw
-	subscribe('added'); // Update status info
-	subscribe('checkbox.changed.unchecked'); // Specific
+```javascript
+PubSub.subscribe('changed'); // Persist data
+PubSub.subscribe('button'); // Redraw
+PubSub.subscribe('added'); // Update status info
+PubSub.subscribe('checkbox.changed.unchecked'); // Specific
 
-	publish('button.changed.added');
-	publish('button.changed.removed');
-	publish('radio.changed.selected');
-	publish('checkbox.changed.unchecked');
-
+PubSub.publish('button.changed.added');
+PubSub.publish('button.changed.removed');
+PubSub.publish('radio.changed.selected');
+PubSub.publish('checkbox.changed.unchecked');
+```
 
 ### Error handling
 Use a single listener to display errors.
 
-	subscribe('failed'); // catch all errors
-	publish('button.add.failed'); // throw error
-	publish('field.validate.failed');
+```javascript
+PubSub.subscribe('failed'); // catch all errors
+PubSub.publish('button.add.failed'); // throw error
+PubSub.publish('field.validate.failed');
+```
 
 ### Debug events
-
-	subscribe('all', function() { console.log(arguments); });
-
-Usage
------
-TODO
-
-Examples
---------
+Listening to the `"all"` event can be useful for debugging:
+```javascript
+PubSub.subscribe('all', function() { console.log(arguments); });
+```
 
 Category Contexts
 -----------------
-Learn by example:
 
 ### Fruits category example
-TODO: make this better
 ```javascript
 var PubSub = require('pubsub-categories');
 
-var context = PubSub.context('fruits');
+var fruityEvents = PubSub.context('fruits');
 
-context.publish('apples');
+fruityEvents.subcribe('all', function(topic) { console.log(topic); });
+
+fruityEvents.publish('apples');
 // console.log: "fruits.apples"
 
-context.publish('pears');
+fruityEvents.publish('pears');
 // console.log: "fruits.pears"
 ```
 
