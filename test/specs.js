@@ -1,6 +1,6 @@
 /*global describe */
 
-describe('pubsub-hierarchy tests', function() {
+describe('pubsub-categories tests', function() {
 
     var PubSub = window.PubSub, // Local closure capture, incase of name change
     EventProvider = PubSub,
@@ -225,7 +225,7 @@ describe('pubsub-hierarchy tests', function() {
 
 
 
-        describe('publish hierarchical events in global context', function() {
+        describe('publish hierarchical categories in global context', function() {
 
             it('can publish events in hierarchy: 1 category level', function() {
 

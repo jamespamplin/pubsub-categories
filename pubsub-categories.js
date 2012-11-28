@@ -1,5 +1,5 @@
 /**
- * @module pubsub-hierarchy
+ * @module pubsub-categories
  *
  * publish / subscribe event model with hierarchical topic categories.
  */
