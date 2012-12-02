@@ -1,3 +1,6 @@
 [submodule "test/jasmine"]
 	path = test/jasmine
 	url = git://github.com/pivotal/jasmine.git
+[submodule "lib/requirejs"]
+	path = lib/requirejs
+	url = git://github.com/jrburke/requirejs.git
