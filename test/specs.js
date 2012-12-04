@@ -213,14 +213,62 @@ describe('pubsub-categories tests', function() {
                 expect(value).toBe(11);
             });
 
-            it('can subscribe once to an event', function() {
-                // TODO 'not yet implemented';
-            });
+
 
         });
 
         describe('unsubscribe', function() {
-            // TODO 'not yet implemented'
+            it('can unsubscribe from a topic', function() {
+                var topic = 'testTopic',
+
+                listener1 = createTestListener(topic, this),
+                listener2 = createTestListener(topic, this);
+
+                PubSub.subscribe(topic, listener1);
+                PubSub.subscribe(topic, listener2);
+
+                PubSub.publish(topic);
+
+                expect(listener1.fireCount).toBe(1);
+                expect(listener2.fireCount).toBe(1);
+
+                expect(this.totalFireCount).toBe(2);
+
+                PubSub.unsubscribe(topic, listener1);
+
+                PubSub.publish(topic);
+
+                expect(listener1.fireCount).toBe(1);
+                expect(listener2.fireCount).toBe(2);
+
+                expect(this.totalFireCount).toBe(3);
+
+            });
+
+
+            it('can subscribe once to an event', function() {
+                var topic = 'testTopic',
+
+                listener1 = createTestListener(topic, this),
+                listener2 = createTestListener(topic, this);
+
+                PubSub.subscribe(topic, listener1);
+                PubSub.subscribeOnce(topic, listener2);
+
+                PubSub.publish(topic);
+
+                expect(listener1.fireCount).toBe(1);
+                expect(listener2.fireCount).toBe(1);
+
+                expect(this.totalFireCount).toBe(2);
+
+                PubSub.publish(topic);
+
+                expect(listener1.fireCount).toBe(2);
+                expect(listener2.fireCount).toBe(1);
+
+                expect(this.totalFireCount).toBe(3);
+            });
         });
 
 

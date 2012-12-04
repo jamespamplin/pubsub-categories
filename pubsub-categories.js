@@ -232,17 +232,40 @@
 
 
             this.subscribeOnce = function(/* string */ topic, /* function */ listener, /* object */ context) {
-                throw 'not yet implemented'; // needs unsubscribe first
+                var listenerWrapper = function() {
+                    self.unsubscribe(topic, listenerWrapper);
+                    listener.apply(this, arguments);
+                };
+
+                return self.subscribe(topic, listenerWrapper, context);
             };
 
 
-            this.unsubscribe = function(/* string */ topic, /* function|string */ listener) { // TODO: listener or listenerID
+            this.unsubscribe = function(/* string */ topic, /* function */ listener) {
                 if (topic == 'all') {
                     _listeners = {};
                     _tree = {};
+                    return true;
 
                 } else {
-                    throw 'not yet implemented';
+                    var listeners = _listeners[topic], i, n;
+                    if (listeners) {
+                        if (listeners instanceof Array) {
+                            n = listeners.length;
+                            for (i = 0; i < n; i++) {
+                                if (listeners[i] === listener) {
+                                    listeners.splice(i, 1);
+                                    return true;
+                                }
+                            }
+
+                        } else if (listeners === listener) {
+                            listeners = undefined;
+                            return true;
+                        }
+                    }
+
+                    return false;
                 }
             };
 

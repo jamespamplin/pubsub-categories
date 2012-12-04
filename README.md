@@ -24,10 +24,11 @@ Features
 - Category event contexts.
 - Category contexts for objects.
 - Private event contexts.
-
-### Upcoming:
 - Unsubscribe single listeners.
 - Subscribe once to an event.
+
+
+### Upcoming:
 - Minified build
 
 
