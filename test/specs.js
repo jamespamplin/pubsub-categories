@@ -595,6 +595,28 @@ describe('pubsub-categories tests', function() {
 
             // note: "this" in listener will no longer be instance, bug?
         });
+
+
+        it('can listen to "all" events within a category context', function() {
+            var category = 'MyObject',
+            topic = 'testTopic',
+            categoryDotTopic = category + '.' + topic,
+
+            listener1 = createTestListener(topic, this, { topic: categoryDotTopic }),
+            listener2 = createTestListener(topic, this, { topic: categoryDotTopic }),
+
+            ctx = PubSub.context(category);
+
+            ctx.subscribe(topic, listener1);
+            ctx.subscribe('all', listener2);
+
+            ctx.publish(topic);
+
+            expect(listener1.fireCount).toBe(1);
+            expect(listener2.fireCount).toBe(1);
+
+            expect(this.totalFireCount).toBe(2, 'Unexpected fire count');
+        });
     });
 
     describe('private contexts', function() {

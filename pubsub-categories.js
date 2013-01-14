@@ -135,6 +135,18 @@
             getCategoryPrefix = function() {
                 var id = objectContext && this && !this.prototype && this[idKey] || '';
                 return category && category + (id && SEPARATOR + id || '') + SEPARATOR || '';
+            },
+
+            getFullCategoryTopicName = function(topic) {
+                if (category) {
+                    var id = objectContext && this && !this.prototype && this[idKey] || '';
+
+                    topic = (topic == 'all') ? '' : topic;
+
+                    return category + (id ? SEPARATOR + id : '') + (topic ? SEPARATOR + topic : '');
+                }
+
+                return topic;
             };
 
             /**
@@ -167,16 +179,14 @@
 
                 var returns, args = Array.prototype.slice.call(arguments);
 
-                topic = getCategoryPrefix.call(this) + topic;
+                topic = getFullCategoryTopicName.call(this, topic);
 
                 args.shift();
                 args.push(topic);
 
-                // TODO: normalise 'all' so that it's either on its own, or not present
-
                 returns = publishRoot(topic, args, this);
 
-                return fire('all', args, this) || returns;
+                return topic != 'all' && fire('all', args, this) || returns;
             };
 
 
@@ -203,7 +213,7 @@
 
                 if (typeof(topic) == 'string' && typeof(listener) == 'function') {
 
-                    topic = getCategoryPrefix.call(this) + topic;
+                    topic = getFullCategoryTopicName.call(this, topic);
 
                     // context = context || this || objectContext || self;
 
@@ -242,6 +252,8 @@
 
 
             this.unsubscribe = function(/* string */ topic, /* function */ listener) {
+                topic = getFullCategoryTopicName.call(this, topic);
+
                 if (topic == 'all') {
                     _listeners = {};
                     _tree = {};
