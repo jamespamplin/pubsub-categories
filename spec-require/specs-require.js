@@ -4,7 +4,7 @@ describe('pubsub-categories loaded via RequireJS', function() {
         var PubSub = false;
 
         runs(function() {
-            require(['pubsub-categories'], function(module) {
+            require(['../pubsub-categories'], function(module) {
                 PubSub = module;
             });
         });
@@ -27,7 +27,7 @@ describe('pubsub-categories loaded via RequireJS', function() {
         PubSub = false;
 
         runs(function() {
-            require(['pubsub-categories'], function(module) {
+            require(['../pubsub-categories'], function(module) {
                 PubSub = module;
             });
         });

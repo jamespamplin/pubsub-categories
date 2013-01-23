@@ -1,11 +1,8 @@
 /*global describe */
 
-var global = this;
+var specs = function(PubSub) {
 
-describe('pubsub-categories tests', function() {
-
-    var PubSub = global && global.PubSub || require('../pubsub-categories'),
-    EventProvider = PubSub,
+    var EventProvider = PubSub,
 
 
     createTestListener = function(topic, testRunner, expectedProperties) {
@@ -684,4 +681,29 @@ describe('pubsub-categories tests', function() {
         });
     });
 
-});
+},
+
+
+runTests = function(PubSub) {
+    describe('pubsub-categories', function() {
+        specs(PubSub);
+    });
+},
+
+
+require, define;
+
+
+// RequireJS spec wrapper
+if (require && define && define.amd) {
+    require(['../pubsub-categories'], runTests);
+
+} else if (require) { // node.js
+    var PubSub = require('../pubsub-categories');
+
+    runTests(PubSub);
+
+} else if (this && this.PubSub) { // global
+    runTests(this.PubSub);
+
+}
