@@ -10,7 +10,7 @@
     },
     "keywords": [ "event", "pubsub", "publish", "subscribe", "category", "categories" ],
     "dependencies": {
-        "jasmine-node": "*"
+        "jasmine-node": "1.0.x"
     },
     "scripts": {
         "test": "./node_modules/jasmine-node/bin/jasmine-node ./spec/"
