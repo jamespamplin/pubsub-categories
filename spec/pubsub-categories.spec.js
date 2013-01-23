@@ -2,7 +2,7 @@
 
 describe('pubsub-categories tests', function() {
 
-    var PubSub = window.PubSub, // Local closure capture, incase of name change
+    var PubSub = require('../pubsub-categories'), // Local closure capture, incase of name change
     EventProvider = PubSub,
 
 
