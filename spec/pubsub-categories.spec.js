@@ -1,8 +1,10 @@
 /*global describe */
 
+var global = this;
+
 describe('pubsub-categories tests', function() {
 
-    var PubSub = require('../pubsub-categories'), // Local closure capture, incase of name change
+    var PubSub = global && global.PubSub || require('../pubsub-categories'),
     EventProvider = PubSub,
 
 
