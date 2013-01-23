@@ -1,0 +1,20 @@
+{
+    "name": "pubsub-categories",
+    "version": "0.0.2",
+    "author": "James Pamplin <james@jamespamplin.com>",
+    "description": "Categorised Event model of Publish/Subscribe",
+    "main": "./pubsub-categories.js",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/jamespamplin/pubsub-categories.git"
+    },
+    "keywords": [ "event", "pubsub", "publish", "subscribe", "category", "categories" ],
+    "dependencies": {
+        "jasmine-node": "*"
+    },
+    "license": "MIT",
+    "engines": {
+        "node": "0.8.x",
+        "npm": "1.1.x"
+    }
+}
