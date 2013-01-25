@@ -201,17 +201,23 @@
              * The "all" topic can also be subscribed to, to listen to every single event published.
              *
              * @example
-             * subscribe('singleEvent');
-             * subscribe('category.event'); // hierarchical event
-             * subscribe('all'); // subscribes to every event fired
+             * subscribe('singleEvent', function() {});
+             * subscribe('category.event', function() {}); // hierarchical event
+             * subscribe('all', function() {}); // subscribes to every event fired
              *
-             * @param {String} topic Name of event topic to listen to for published events.
+             * subscribe({
+             *     'listener1': function() {},
+             *     'listener2': function() {}
+             * });
+             *
+             * @param {string|object} topic Name of event topic to listen to for published events.
              * @param {Function} listener Callback receiver for when the event topic will publish.
              * @param {Object} context Object context used as "this" accessor when listener is fired.
              */
-            this.subscribe = function(/* String */ topic, /* Function */ listener, /* Object */ context) {
+            this.subscribe = function(topic, listener, context) {
+                var topicType = typeof(topic);
 
-                if (typeof(topic) == 'string' && typeof(listener) == 'function') {
+                if (topicType == 'string' && typeof(listener) == 'function') {
 
                     topic = getFullCategoryTopicName.call(this, topic);
 
@@ -235,6 +241,14 @@
                     }
 
                     return true;
+
+                } else if (topicType == 'object') {
+                    var t, out = true;
+                    for (t in topic) {
+                        out = out && self.subscribe(t, topic[t]);
+                    }
+
+                    return out;
                 }
 
             };

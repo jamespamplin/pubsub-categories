@@ -216,6 +216,25 @@ var specs = function(PubSub) {
 
         });
 
+        it('can subscribe to map of listeners', function() {
+            var listeners = {
+                'listener1': createTestListener('listener1', this),
+                'listener2': createTestListener('listener2', this)
+            };
+
+            subscribe(listeners);
+
+            publish('listener1');
+
+            expect(listeners.listener1.fireCount).toBe(1);
+            expect(listeners.listener2.fireCount).toBe(0);
+
+            publish('listener2');
+
+            expect(listeners.listener1.fireCount).toBe(1);
+            expect(listeners.listener2.fireCount).toBe(1);
+        });
+
         describe('unsubscribe', function() {
             it('can unsubscribe from a topic', function() {
                 var topic = 'testTopic',
