@@ -1,11 +1,10 @@
-/*global describe */
+/*global jasmine,describe,expect,beforeEach,it,runs,waitsFor */
 
 var specs = function(PubSub) {
 
-    var EventProvider = PubSub,
+    'use strict';
 
-
-    createTestListener = function(topic, testRunner, expectedProperties) {
+    var createTestListener = function(topic, testRunner, expectedProperties) {
 
         if (isNaN(testRunner.totalFireCount)) { testRunner.totalFireCount = 0; }
 
@@ -30,24 +29,6 @@ var specs = function(PubSub) {
         listener.fireCount = 0;
 
         return listener;
-    },
-
-
-    // old test listener - to be deprecated
-    TestListener = function(testRunner, order) {
-        this.fireCount = 0;
-        this.testRunner = testRunner;
-        this.expectedOrder = order;
-    };
-
-    TestListener.prototype.fire = function(params, eventName) {
-        this.fireCount++;
-        this.testRunner.totalFireCount++;
-        this.order = this.testRunner.totalFireCount;
-
-        this.lastArgs = arguments;
-        this.lastEvent = eventName;
-        this.lastParams = params;
     };
 
 
@@ -67,28 +48,29 @@ var specs = function(PubSub) {
 
 
     beforeEach(function() {
-        EventProvider.unsubscribe('all'); // reset global event provider
+        PubSub.unsubscribe('all'); // reset global event provider
+
         publishedListeners = [];
     });
 
     describe('global context', function() {
 
-        var publish = EventProvider.publish, // easy access aliases for Global pub/sub
-        subscribe = EventProvider.subscribe;
+        var publish = PubSub.publish, // easy access aliases for Global context pub/sub
+        subscribe = PubSub.subscribe;
 
 
         it('can unsubscribe all listeners', function() { // tested first as used for test cleanup
-            var fired = false;
 
-            subscribe('testUnsubscribeAll', function() {
-                fired = true;
-            });
+            var listener = stubListener();
 
-            EventProvider.unsubscribe('all');
+            subscribe('testUnsubscribeAll', listener);
+
+            PubSub.unsubscribe('all');
 
             publish('testUnsubscribeAll');
 
-            expect(fired).toBe(false);
+            expect(listener).not.toHaveBeenCalled();
+
         });
 
 
@@ -475,7 +457,7 @@ var specs = function(PubSub) {
         it('can publish a context event', function() {
             var category = 'testCategory',
             context = PubSub.context(category);
-            topic = 'testTopic',
+            var topic = 'testTopic',
             categoryDotTopic = category + '.' + topic;
 
 
@@ -489,7 +471,7 @@ var specs = function(PubSub) {
             expect(this.totalFireCount).toBe(4);
         });
 
-        xit('can subscribe to all event in context');
+
 
     });
 
@@ -568,7 +550,7 @@ var specs = function(PubSub) {
             myInstance = new MyObject();
 
             myInstance.subscribe(topic, function(topicName) {
-                topicInInstanceFired = true;
+                // topicInInstanceFired = true;
                 expect(topicName).toBe(categoryDotTopic);
             });
 
@@ -698,7 +680,7 @@ var specs = function(PubSub) {
         it('can change category separator', function() {
             var eventContext = new PubSub('|');
 
-            topic = 'testTopic',
+            var topic = 'testTopic',
             category = 'testCategory',
 
             categoryFired = false;
