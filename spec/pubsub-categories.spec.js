@@ -291,7 +291,7 @@ var specs = function(PubSub) {
 
 
 
-        describe('publish hierarchical categories in global context', function() {
+        describe('publish hierarchical categories', function() {
 
 
             var testOrderedCategories = function(topicToPublish, orderedTopics) {
@@ -338,9 +338,10 @@ var specs = function(PubSub) {
 
                 var orderedTopics = [
                     'trunk.branch.leaf',
-                    'branch.leaf',
+                    'branch.leaf', /* new */
                     'trunk.leaf',
                     'leaf',
+
                     'trunk.branch',
                     'branch',
                     'trunk',
@@ -353,24 +354,25 @@ var specs = function(PubSub) {
 
 
             it('can publish 3 category levels', function() {
-
+                // right, left, end
                 var orderedTopics = [ // to listen for in expected order
-                    'one.two.three.four',
-                    'two.three.four', // new
-                        'three.four', //new??
+                    'one.two.three.four', // 2, 1, 34
+                        'two.three.four', /* new */
+                        'one.three.four',
+                            'three.four', /* new */
 
 
-                    'one.two.four',
-                        'two.four', //new??
+                    'one.two.four', // (124) 2,1,4
+                        'two.four', /* new */
                         'one.four',
                             'four',
 
-                    'one.two.three',
+                    'one.two.three', // (123) 2,1,3
                         'two.three',
                         'one.three',
                             'three',
 
-                        'one.two',
+                        'one.two', // (12) 2, 1, all
                             'two',
                             'one',
                     'all'
@@ -384,33 +386,50 @@ var specs = function(PubSub) {
 
                 var orderedTopics = [
 
-                    'one.two.three.four.five',
+                    'one.two.three.four.five', // 2,1, 345 - 3, 4, 5
                         'two.three.four.five',
-                            'three.four.five',
+                        'one.three.four.five',
+                        'three.four.five',
+
+                            'one.two.four.five', // (1245) 2, 1, 45
+                                'two.four.five',
+                                'one.four.five',
                                 'four.five',
+
+
+                            'one.two.three.five', // (1235) 2, 1, 35
+                                'two.three.five', /* new */
+                                'one.three.five',
+                                'three.five', /* new */
+
+
+                                'one.two.five', // ((125)) 2,1,5
+                                    'two.five', /* new */
+                                    'one.five',
                                     'five',
 
-                        'one.two.three.five',
-                            'one.two.five',
-                                'one.five',
-                            'two.three.five',
-                                'two.five',
-                                'three.five',
 
 
-                        'one.two.three.four',      'one.two.four', 'one.four',
-                        'two.three.four',          'two.four',
-                        'three.four',
-                        'four',
+                        'one.two.three.four', // ((1234)) 2, 1, 34
+                            'two.three.four', /* new */
+                            'one.three.four',
+                                'three.four', /* new */
 
-                        'one.two.three',           'one.three',
-                        'two.three',
-                        'three',
 
-                        'one.two',
-                        'two',
+                            'one.two.four', // (124) 2,1,4
+                                'two.four', /* new */
+                                'one.four',
+                                    'four',
 
-                        'one',
+                            'one.two.three', // ((123)) 2,1,3
+                                'two.three',
+                                'one.three',
+                                    'three',
+
+                                'one.two', // ((12)) 2, 1, all
+                                    'two',
+                                    'one',
+
 
                         'all'
 
