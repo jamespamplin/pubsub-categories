@@ -41,6 +41,7 @@ var specs = function(PubSub) {
 
         spy.andCallFake(function() {
             publishedListeners.push(spy);
+            console.log('stubListener published for topic: ' + topic);
         });
 
         return spy;

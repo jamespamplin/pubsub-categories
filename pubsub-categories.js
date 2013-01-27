@@ -18,6 +18,11 @@
         _tree = {},
 
 
+        // right, left, end
+        /**
+         * @param  {[type]} topic [description]
+         * @return {Array} Pair of
+         */
         getTreeBranches = function(topic) { // trunk.branch.leaf
             var branches = _tree[topic];
 
@@ -78,6 +83,56 @@
             }
             return returns;
         },
+
+
+
+
+        publishTripleCat = function(topic, args, context) {
+            // 'one.two.three', // (123) 2,1,3
+            // 'two.three',
+            // 'one.three',
+            //     'three',
+
+            var firstIndex, first, secondIndex, second, end;
+
+            fire(topic, args, context);
+
+            firstIndex = topic.indexOf(SEPARATOR);
+            if (firstIndex !== -1) {  // we have categories to publish
+                first = topic.substring(0, firstIndex);
+
+                secondIndex = topic.indexOf(SEPARATOR, firstIndex + 1);
+
+                if (secondIndex !== -1) {  // we have a second layer of categories
+                    second = topic.substring(firstIndex + 1, secondIndex);
+                    end = topic.substring(secondIndex + 1) || 'all';
+
+                    fire(second + SEPARATOR + end, args, context);
+                    fire(first + SEPARATOR + end, args, context);
+
+                } else {
+                    second = topic.substring(firstIndex + 1);
+                    end = 'all';
+                }
+
+            console.log(topic, first + ';' + second + ';' + end + ';', firstIndex, secondIndex);
+
+
+
+                publishTripleCat(end, args, context);
+
+                if (second) {
+                    publishTripleCat(first + SEPARATOR + second, args, context);
+                }
+            }
+
+
+
+
+
+            // fire (first.second)
+        },
+
 
 
         /**
@@ -184,7 +239,8 @@
                 args.shift();
                 args.push(topic);
 
-                returns = publishRoot(topic, args, this);
+                // returns = publishRoot(topic, args, this);
+                returns = publishTripleCat(topic, args, this);
 
                 return topic != 'all' && fire('all', args, this) || returns;
             };
@@ -329,7 +385,7 @@
                 } else {
                     copyFunctions(ctx, objectContext);
 
-                    objectContext.prototype && copyFunctions(ctx, objectContext.prototype);
+                    if (objectContext.prototype) { copyFunctions(ctx, objectContext.prototype); }
                 }
             }
 
