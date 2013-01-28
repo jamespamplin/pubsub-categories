@@ -92,45 +92,72 @@
             // 'two.three',
             // 'one.three',
             //     'three',
+            // 'one.two'
+            // 'two'
+            // 'one'
+            //
+            // 'one.two.three.four'
+            //      'one.two.four'
+            //      'one.two.three'
 
-            var firstIndex, first, secondIndex, second, end;
-
-            fire(topic, args, context);
+            var firstIndex, first, secondIndex, second, end, right, left, returns;
+            console.log('pub', topic);
+            returns = fire(topic, args, context);
 
             firstIndex = topic.indexOf(SEPARATOR);
-            if (firstIndex !== -1) {  // we have categories to publish
+            if (returns !== false && firstIndex !== -1) {  // we have categories to publish
                 first = topic.substring(0, firstIndex);
 
                 secondIndex = topic.indexOf(SEPARATOR, firstIndex + 1);
 
                 if (secondIndex !== -1) {  // we have a second layer of categories
                     second = topic.substring(firstIndex + 1, secondIndex);
-                    end = topic.substring(secondIndex + 1) || 'all';
+                    end = topic.substring(secondIndex + 1);
 
-                    fire(second + SEPARATOR + end, args, context);
-                    fire(first + SEPARATOR + end, args, context);
+                    right = second + SEPARATOR + end;
+                    left = first + SEPARATOR + end;
 
-                } else {
-                    second = topic.substring(firstIndex + 1);
-                    end = 'all';
+                    pubTriple(left, right, end, args, context);
+
+                } else { // just the one category
+
+                    right = topic.substring(firstIndex + 1);
+                    left = first;
+                    // end = 'all';
+
+                    returns = fire(right, args, context);
+                    if (returns !== false) { returns = fire(left, args, context); }
                 }
 
-            console.log(topic, first + ';' + second + ';' + end + ';', firstIndex, secondIndex);
 
 
 
-                publishTripleCat(end, args, context);
 
-                if (second) {
-                    publishTripleCat(first + SEPARATOR + second, args, context);
+
+                // if (returns !== false && end) { returns = publishTripleCat(end, args, context); }
+
+                if (returns !== false && secondIndex !== -1) {
+                    returns = publishTripleCat(first + SEPARATOR + second, args, context);
                 }
+
             }
 
-
+            return returns;
 
 
 
             // fire (first.second)
+        },
+
+        pubTriple = function(left, right, end, args, context) {
+            console.log('triple: ', left, right, end);
+
+            var returns = fire(right, args, context);
+            if (returns !== false) { returns = fire(left, args, context); }
+
+            if (returns !== false && end) { returns = fire(end, args, context); }
+
+            return returns;
         },
 
 
@@ -242,7 +269,8 @@
                 // returns = publishRoot(topic, args, this);
                 returns = publishTripleCat(topic, args, this);
 
-                return topic != 'all' && fire('all', args, this) || returns;
+                // return topic != 'all' && fire('all', args, this) || returns;
+                return returns;
             };
 
 
