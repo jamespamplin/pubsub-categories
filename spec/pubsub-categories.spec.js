@@ -440,6 +440,87 @@ var specs = function(PubSub) {
 
             });
 
+
+            it('can publish 5 category levels', function() {
+
+                var orderedTopics = [
+
+                    'one.two.three.four.five.six',
+                        'two.three.four.five.six', // ,3456
+                        'one.three.four.five.six',
+                            'three.four.five.six',
+
+                            'one.two.four.five.six', // ,456
+                                'two.four.five.six',
+                                'one.four.five.six',
+                                    'four.five.six',
+
+                            'one.two.five.six', // ,56
+                                'two.five.six',
+                                'one.five.six',
+                                    'five.six',
+
+                            'one.two.six', // ,6
+                                'two.six',
+                                'one.six',
+                                    'six',
+
+
+                    'one.two.three.four.five', // ((12345)) 2,1, 345 - 3, 4, 5
+                        'two.three.four.five',
+                        'one.three.four.five',
+                        'three.four.five',
+
+                            'one.two.four.five', // (1245) 2, 1, 45
+                                'two.four.five',
+                                'one.four.five',
+                                'four.five',
+
+
+                            'one.two.three.five', // (1235) 2, 1, 35
+                                'two.three.five', /* new */
+                                'one.three.five',
+                                'three.five', /* new */
+
+
+                                'one.two.five', // ((125)) 2,1,5
+                                    'two.five', /* new */
+                                    'one.five',
+                                    'five',
+
+
+
+                    'one.two.three.four', // ((1234)) 2, 1, 34
+                        'two.three.four', /* new */
+                        'one.three.four',
+                            'three.four', /* new */
+
+
+                        'one.two.four', // (124) 2,1,4
+                            'two.four', /* new */
+                            'one.four',
+                                'four',
+
+                    'one.two.three', // ((123)) 2,1,3
+                        'two.three',
+                        'one.three',
+                            'three',
+
+                    'one.two', // ((12)) 2, 1, all
+                        'two',
+                        'one',
+
+
+                    'all'
+
+                ];
+
+                testOrderedCategories('one.two.three.four.five.six', orderedTopics);
+
+            });
+
+
+
             it('can stop propagation when in hierarchy', function() {
                 var totalFireCount = 0,
                 topic = 'one.two.three.four',
