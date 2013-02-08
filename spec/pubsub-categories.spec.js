@@ -450,16 +450,46 @@ var specs = function(PubSub) {
                         'one.three.four.five.six',
                             'three.four.five.six',
 
-                            'one.two.four.five.six', // ,456
-                                'two.four.five.six',
-                                'one.four.five.six',
-                                    'four.five.six',
 
+                         // 12,3,456
+                        'one.two.four.five.six', // ,(4)56
+                            'two.four.five.six',
+                            'one.four.five.six',
+                                'four.five.six',
+
+                        // 123,4,56
+                        'one.two.three.five.six', // ,(3)56
+                            'two.three.five.six',
+                            'one.three.five.six',
+                                'three.five.six',
+
+                            // 12,34,56
                             'one.two.five.six', // ,56
                                 'two.five.six',
                                 'one.five.six',
                                     'five.six',
 
+
+
+                        // 12,346
+                        'one.two.three.four.six', // ,346
+                            'two.three.four.six',
+                            'one.three.four.six',
+                                'three.four.six',
+
+                            // 12,3,46
+                            'one.two.four.six', // ,46 r
+                                'two.four.six',
+                                'one.four.six',
+                                    'four.six',
+
+                            // 123,4,6
+                            'one.two.three.six', // ,36 l
+                                'two.three.six',
+                                'one.three.six',
+                                'three.six',
+
+                            // 12,345,6
                             'one.two.six', // ,6
                                 'two.six',
                                 'one.six',

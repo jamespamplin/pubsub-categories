@@ -117,7 +117,16 @@
                     right = second + SEPARATOR + end;
                     left = first + SEPARATOR + end;
 
+
                     pubTriple(left, right, end, args, context);
+
+
+                    // new
+                    var next = end.indexOf('.');
+                    if (next !== -1) {
+
+                    }
+
 
                 } else { // just the one category
 
@@ -136,9 +145,9 @@
 
                 // if (returns !== false && end) { returns = publishTripleCat(end, args, context); }
 
-                if (returns !== false && secondIndex !== -1) {
-                    returns = publishTripleCat(first + SEPARATOR + second, args, context);
-                }
+                // if (returns !== false && secondIndex !== -1) {
+                //     returns = publishTripleCat(first + SEPARATOR + second, args, context);
+                // }
 
             }
 
@@ -147,6 +156,33 @@
 
 
             // fire (first.second)
+        },
+
+
+        pubCatHierarchy = function(topic, parents) {
+
+            var first, end, firstIndex = topic.indexOf(SEPARATOR);
+
+            fire(topic);
+
+            if (firstIndex !== -1) {
+                parents = parents || [];
+                first = topic.substring(0, firstIndex);
+                end = topic.substring(firstIndex + 1);
+
+
+
+                for (var i = parents.length - 1; i >= 0; i--) {
+                    fire(parents[i] + SEPARATOR + end);
+                }
+
+                parents.push(first);
+
+                // fire(end);
+                //
+
+                pubCatHierarchy(end, parents);
+            }
         },
 
         pubTriple = function(left, right, end, args, context) {
@@ -267,7 +303,8 @@
                 args.push(topic);
 
                 // returns = publishRoot(topic, args, this);
-                returns = publishTripleCat(topic, args, this);
+                // returns = publishTripleCat(topic, args, this);
+                returns = pubCatHierarchy(topic);
 
                 // return topic != 'all' && fire('all', args, this) || returns;
                 return returns;
