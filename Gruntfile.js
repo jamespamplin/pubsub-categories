@@ -33,7 +33,7 @@ module.exports = function(grunt) {
 
         // Select a Mocha reporter
         // http://visionmedia.github.com/mocha/#reporters
-        reporter: 'Nyan',
+        reporter: 'Spec',
 
         // Indicates whether 'mocha.run()' should be executed in
         // 'bridge.js'. If you include `mocha.run()` in your html spec,
@@ -56,8 +56,7 @@ module.exports = function(grunt) {
 
   // Whenever the "test" task is run, first clean the "tmp" dir, then run this
   // plugin's task(s), then test the result.
-  grunt.registerTask('test', ['mocha']);
-  grunt.registerTask('lint', ['jshint']);
+  grunt.registerTask('test', ['jshint', 'mocha']);
 
   // By default, lint and run all tests.
   grunt.registerTask('default', ['test']);

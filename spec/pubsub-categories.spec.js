@@ -23,8 +23,8 @@ var specs = function(PubSub) {
             listener.topic = arguments[arguments.length - 1];
 
             if (expectedProperties) {
-                for (var prop in expectedProperties) { // need toEqual / to.equal?
-                    expect(listener[prop]).toEqual(expectedProperties[prop], 'Unexpected "' + prop + '" for fired listener on topic "' + topic + '"');
+                for (var prop in expectedProperties) { // need to.equal / to.equal?
+                    expect(listener[prop]).to.equal(expectedProperties[prop], 'Unexpected "' + prop + '" for fired listener on topic "' + topic + '"');
                 }
             }
         };
@@ -280,45 +280,42 @@ var specs = function(PubSub) {
 
                 this.totalFireCount = 0;
 
-                var listeners = {
+                var key, listener, listeners = {
                     'root.testEvent':   new TestListener(this, 1),
                     'testEvent':        new TestListener(this, 2),
                     'root':             new TestListener(this, 3),
                     'all':              new TestListener(this, 4)
                 };
 
-                for(var key in listeners) {
-                    var listener = listeners[key];
+                for(key in listeners) {
+                    listener = listeners[key];
                     subscribe(key, listener.fire, listener);
                 }
 
                 var param = 'testParam1',
                 eventName = 'root.testEvent';
 
-                runs(function() {
-                    publish(eventName, param);
-                });
+                publish(eventName, param);
 
-                runs(function() {
-                    for(var key in listeners) {
-                        var listener = listeners[key];
+                for(key in listeners) {
+                    listener = listeners[key];
 
-                        expect(listener.fireCount).toNotEqual(0, 'fire count error - listener "' + key + '" never fired');
-                        expect(listener.fireCount).toEqual(1, 'unexpected fire count for listener "' + key + '"');
-                        expect(listener.order).toEqual(listener.expectedOrder, 'incorrect order for listener "' + key + '"');
-                        expect(listener.lastEvent).toEqual(eventName, 'incorrect published topic for listener "' + key + '"');
-                        expect(listener.lastParams).toEqual(param, 'incorrect event arguments for listener "' + key + '"');
-                    }
+                    expect(listener.fireCount).to.not.equal(0, 'fire count error - listener "' + key + '" never fired');
+                    expect(listener.fireCount).to.equal(1, 'unexpected fire count for listener "' + key + '"');
+                    expect(listener.order).to.equal(listener.expectedOrder, 'incorrect order for listener "' + key + '"');
+                    expect(listener.lastEvent).to.equal(eventName, 'incorrect published topic for listener "' + key + '"');
+                    expect(listener.lastParams).to.equal(param, 'incorrect event arguments for listener "' + key + '"');
+                }
 
-                    expect(this.totalFireCount).toEqual(4, 'unexpected total fire count');
-                });
+                expect(this.totalFireCount).to.equal(4, 'unexpected total fire count');
+
             });
 
             it('can publish events in hierarchy: 2 category levels', function() {
 
                 this.totalFireCount = 0;
 
-                var listeners = {
+                var key, listener, listeners = {
                     'trunk.branch.leaf':         new TestListener(this, 1),
                     'trunk.leaf':                new TestListener(this, 2),
                     'leaf':                      new TestListener(this, 3),
@@ -328,31 +325,27 @@ var specs = function(PubSub) {
                     'all':                       new TestListener(this, 7)
                 };
 
-                for(var key in listeners) {
-                    var listener = listeners[key];
+                for(key in listeners) {
+                    listener = listeners[key];
                     subscribe(key, listener.fire, listener);
                 }
 
                 var params = ['testParam1'],
                 eventName = 'trunk.branch.leaf';
 
-                runs(function() {
-                    publish(eventName, 'testParam1');
-                });
+                publish(eventName, 'testParam1');
 
-                runs(function() {
-                    for(var key in listeners) {
-                        var listener = listeners[key];
+                for(key in listeners) {
+                    listener = listeners[key];
 
-                        expect(listener.fireCount).toNotEqual(0, 'fire count error - listener "' + key + '" never fired');
-                        expect(listener.fireCount).toEqual(1, 'unexpected fire count for listener "' + key + '"');
-                        expect(listener.order).toEqual(listener.expectedOrder, 'incorrect order for listener "' + key + '"');
-                        expect(listener.lastEvent).toEqual(eventName, 'incorrect published topic for listener "' + key + '"');
-                        expect(listener.lastParams).toEqual(params[0], 'incorrect event arguments for listener "' + key + '"');
-                    }
+                    expect(listener.fireCount).to.not.equal(0, 'fire count error - listener "' + key + '" never fired');
+                    expect(listener.fireCount).to.equal(1, 'unexpected fire count for listener "' + key + '"');
+                    expect(listener.order).to.equal(listener.expectedOrder, 'incorrect order for listener "' + key + '"');
+                    expect(listener.lastEvent).to.equal(eventName, 'incorrect published topic for listener "' + key + '"');
+                    expect(listener.lastParams).to.equal(params[0], 'incorrect event arguments for listener "' + key + '"');
+                }
 
-                    expect(this.totalFireCount).toEqual(7, 'unexpected total fire count');
-                });
+                expect(this.totalFireCount).to.equal(7, 'unexpected total fire count');
             });
 
 
@@ -374,9 +367,11 @@ var specs = function(PubSub) {
                     'all'
                 ],
 
-                listeners = {};
+                listeners = {},
 
-                for (var i = 0, listener, topic; (topic = orderedListenerTopics[i]); i++) {
+                listener, key;
+
+                for (var i = 0, topic; (topic = orderedListenerTopics[i]); i++) {
                     listener = new TestListener(this, i + 1);
                     subscribe(topic, listener.fire, listener);
                     listeners[topic] = listener;
@@ -386,24 +381,20 @@ var specs = function(PubSub) {
                 var param = 'testParam1',
                 eventName = 'one.two.three.four';
 
-                runs(function() {
-                    publish(eventName, param);
-                });
+                publish(eventName, param);
 
-                runs(function() {
-                    for(var key in listeners) {
-                        var listener = listeners[key];
+                for(key in listeners) {
+                    listener = listeners[key];
 
-                        expect(listener.fireCount).toNotEqual(0, 'fire count error - listener "' + key + '" never fired');
-                        expect(listener.fireCount).toEqual(1, 'unexpected fire count for listener "' + key + '"');
-                        expect(listener.order).toEqual(listener.expectedOrder, 'incorrect order for listener "' + key + '"');
-                        expect(listener.lastEvent).toEqual(eventName, 'incorrect published topic for listener "' + key + '"');
-                        expect(listener.lastParams).toEqual(param, 'incorrect event arguments for listener "' + key + '"');
-                    }
+                    expect(listener.fireCount).to.not.equal(0, 'fire count error - listener "' + key + '" never fired');
+                    expect(listener.fireCount).to.equal(1, 'unexpected fire count for listener "' + key + '"');
+                    expect(listener.order).to.equal(listener.expectedOrder, 'incorrect order for listener "' + key + '"');
+                    expect(listener.lastEvent).to.equal(eventName, 'incorrect published topic for listener "' + key + '"');
+                    expect(listener.lastParams).to.equal(param, 'incorrect event arguments for listener "' + key + '"');
+                }
 
-                    expect(this.totalFireCount).toEqual(orderedListenerTopics.length, 'unexpected total fire count');
+                expect(this.totalFireCount).to.equal(orderedListenerTopics.length, 'unexpected total fire count');
 
-                });
             });
 
             it('can stop propagation when in hierarchy', function() {
@@ -425,13 +416,9 @@ var specs = function(PubSub) {
                 }
 
 
-                runs(function() {
-                    publish(topic);
-                });
+                publish(topic);
 
-                runs(function() {
-                    expect(value).to.equal(10);
-                });
+                expect(value).to.equal(10);
             });
 
         });
@@ -445,7 +432,7 @@ var specs = function(PubSub) {
             context = PubSub.context(category);
             var topic = 'testTopic',
             categoryDotTopic = category + '.' + topic;
-
+            this.totalFireCount = 0;
 
             context.subscribe(topic, createTestListener(topic, this, { topic: categoryDotTopic }));
             PubSub.subscribe(topic, createTestListener(topic, this, { topic: categoryDotTopic }));
@@ -457,7 +444,7 @@ var specs = function(PubSub) {
             expect(this.totalFireCount).to.equal(4);
         });
 
-        xit('can subscribe to all event in context');
+        // xit('can subscribe to all event in context');
 
     });
 
@@ -471,6 +458,8 @@ var specs = function(PubSub) {
 
             MyObject = function() {}; // constructor
             MyObject.prototype.testFn = function() {};
+
+            this.totalFireCount = 0;
 
             var ctx = PubSub.context(category, MyObject);
 
@@ -499,7 +488,7 @@ var specs = function(PubSub) {
             // Class def
             MyObject = function(id) { this.id = id; this.testInst = 'test'; }; // constructor
             MyObject.prototype.testFn = function() {};
-
+            this.totalFireCount = 0;
             // Create Context
             var ctx = PubSub.context(category, MyObject),
 
@@ -534,6 +523,8 @@ var specs = function(PubSub) {
             var ctx = PubSub.context(category, MyObject),
 
             myInstance = new MyObject();
+
+            this.totalFireCount = 0;
 
             myInstance.subscribe(topic, function(topicName) {
                 // topicInInstanceFired = true;
@@ -607,6 +598,8 @@ var specs = function(PubSub) {
             listener2 = createTestListener(topic, this, { topic: categoryDotTopic }),
 
             ctx = PubSub.context(category);
+
+            this.totalFireCount = 0;
 
             ctx.subscribe(topic, listener1);
             ctx.subscribe('all', listener2);
@@ -694,11 +687,11 @@ runTests = function(PubSub) {
 
 
 // RequireJS spec wrapper
-if (require && define && define.amd) {
-    require(['../pubsub-categories'], runTests);
+if (this.require && this.define && this.define.amd) {
+    this.require(['../pubsub-categories'], runTests);
 
-} else if (require) { // node.js
-    var PubSub = require('../pubsub-categories');
+} else if (this.require) { // node.js
+    var PubSub = this.require('../pubsub-categories');
 
     runTests(PubSub);
 

@@ -329,7 +329,7 @@
                 } else {
                     copyFunctions(ctx, objectContext);
 
-                    objectContext.prototype && copyFunctions(ctx, objectContext.prototype);
+                    if (objectContext.prototype) { copyFunctions(ctx, objectContext.prototype); }
                 }
             }
 
