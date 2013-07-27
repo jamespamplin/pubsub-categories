@@ -16,11 +16,8 @@
     "category",
     "categories"
   ],
-  "dependencies": {
-    "jasmine-node": "1.0.x"
-  },
   "scripts": {
-    "test": "./node_modules/jasmine-node/bin/jasmine-node ./spec/"
+    "test": "grunt test"
   },
   "license": "MIT",
   "engines": {
