@@ -1,4 +1,4 @@
-/*global describe */
+/*global describe,beforeEach,sinon,it,expect,window, define */
 
 var specs = function(PubSub) {
 
@@ -229,27 +229,23 @@ var specs = function(PubSub) {
             it('can unsubscribe from a topic', function() {
                 var topic = 'testTopic',
 
-                listener1 = createTestListener(topic, this),
-                listener2 = createTestListener(topic, this);
+                listener1 = sinon.spy(),
+                listener2 = sinon.spy();
 
                 PubSub.subscribe(topic, listener1);
                 PubSub.subscribe(topic, listener2);
 
                 PubSub.publish(topic);
 
-                expect(listener1.fireCount).to.equal(1);
-                expect(listener2.fireCount).to.equal(1);
-
-                expect(this.totalFireCount).to.equal(2);
+                expect(listener1.callCount).to.equal(1);
+                expect(listener2.callCount).to.equal(1);
 
                 PubSub.unsubscribe(topic, listener1);
 
                 PubSub.publish(topic);
 
-                expect(listener1.fireCount).to.equal(1);
-                expect(listener2.fireCount).to.equal(2);
-
-                expect(this.totalFireCount).to.equal(3);
+                expect(listener1.callCount).to.equal(1);
+                expect(listener2.callCount).to.equal(2);
 
             });
 
@@ -257,25 +253,22 @@ var specs = function(PubSub) {
             it('can subscribe once to an event', function() {
                 var topic = 'testTopic',
 
-                listener1 = createTestListener(topic, this),
-                listener2 = createTestListener(topic, this);
+                listener1 = sinon.spy(),
+                listener2 = sinon.spy();
 
                 PubSub.subscribe(topic, listener1);
                 PubSub.subscribeOnce(topic, listener2);
 
                 PubSub.publish(topic);
 
-                expect(listener1.fireCount).to.equal(1);
-                expect(listener2.fireCount).to.equal(1);
-
-                expect(this.totalFireCount).to.equal(2);
+                expect(listener1.callCount).to.equal(1);
+                expect(listener2.callCount).to.equal(1);
 
                 PubSub.publish(topic);
 
-                expect(listener1.fireCount).to.equal(2);
-                expect(listener2.fireCount).to.equal(1);
+                expect(listener1.callCount).to.equal(2);
+                expect(listener2.callCount).to.equal(1);
 
-                expect(this.totalFireCount).to.equal(3);
             });
         });
 
@@ -287,7 +280,7 @@ var specs = function(PubSub) {
 
                 this.totalFireCount = 0;
 
-                listeners = {
+                var listeners = {
                     'root.testEvent':   new TestListener(this, 1),
                     'testEvent':        new TestListener(this, 2),
                     'root':             new TestListener(this, 3),
@@ -299,7 +292,7 @@ var specs = function(PubSub) {
                     subscribe(key, listener.fire, listener);
                 }
 
-                param = 'testParam1';
+                var param = 'testParam1',
                 eventName = 'root.testEvent';
 
                 runs(function() {
@@ -325,7 +318,7 @@ var specs = function(PubSub) {
 
                 this.totalFireCount = 0;
 
-                listeners = {
+                var listeners = {
                     'trunk.branch.leaf':         new TestListener(this, 1),
                     'trunk.leaf':                new TestListener(this, 2),
                     'leaf':                      new TestListener(this, 3),
@@ -340,7 +333,7 @@ var specs = function(PubSub) {
                     subscribe(key, listener.fire, listener);
                 }
 
-                params = ['testParam1'];
+                var params = ['testParam1'],
                 eventName = 'trunk.branch.leaf';
 
                 runs(function() {
@@ -390,7 +383,7 @@ var specs = function(PubSub) {
                 }
 
 
-                param = 'testParam1';
+                var param = 'testParam1',
                 eventName = 'one.two.three.four';
 
                 runs(function() {
@@ -450,7 +443,7 @@ var specs = function(PubSub) {
         it('can publish a context event', function() {
             var category = 'testCategory',
             context = PubSub.context(category);
-            topic = 'testTopic',
+            var topic = 'testTopic',
             categoryDotTopic = category + '.' + topic;
 
 
@@ -543,7 +536,7 @@ var specs = function(PubSub) {
             myInstance = new MyObject();
 
             myInstance.subscribe(topic, function(topicName) {
-                topicInInstanceFired = true;
+                // topicInInstanceFired = true;
                 expect(topicName).to.equal(categoryDotTopic);
             });
 
@@ -673,7 +666,7 @@ var specs = function(PubSub) {
         it('can change category separator', function() {
             var eventContext = new PubSub('|');
 
-            topic = 'testTopic',
+            var topic = 'testTopic',
             category = 'testCategory',
 
             categoryFired = false;
@@ -697,10 +690,7 @@ runTests = function(PubSub) {
     describe('pubsub-categories', function() {
         specs(PubSub);
     });
-},
-
-
-require, define;
+};
 
 
 // RequireJS spec wrapper
