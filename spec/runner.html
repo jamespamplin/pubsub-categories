@@ -11,18 +11,17 @@
 
     <!-- mocha -->
     <script src="../node_modules/mocha/mocha.js" type="text/javascript" charset="utf-8"></script>
-    <script type="text/javascript" charset="utf-8">
-        // This will be overridden by mocha-helper if you run with grunt
-        mocha.setup('bdd');
-    </script>
 
-    <!-- Include your assertion lib of choice -->
+    <!-- vendor scripts -->
     <script src="../node_modules/chai/chai.js" type="text/javascript" charset="utf-8"></script>
     <script src="../vendor/sinon-1.7.3.js" type="text/javascript" charset="utf-8"></script>
+
+    <!-- setup -->
     <script type="text/javascript" charset="utf-8">
-        // Setup chai
-        var expect = chai.expect;
+        mocha.ui('bdd');
+        expect = chai.expect;
     </script>
+
 
     <!-- Include anything you want to test -->
     <script src="../pubsub-categories.js" type="text/javascript" charset="utf-8"></script>
@@ -30,15 +29,9 @@
     <!-- Spec files -->
     <script src="./pubsub-categories.spec.js" type="text/javascript" charset="utf-8"></script>
 
-    <!-- run mocha -->
     <script type="text/javascript" charset="utf-8">
-        // If tests run in a real browser
-        // Can alternatively do a check on window.PHANTOMJS
-        if (navigator.userAgent.indexOf('PhantomJS') < 0) {
-            mocha
-                // .globals(['Wombat', 'Apple']) // acceptable globals
-                .run();
-        }
+      if (window.mochaPhantomJS) { mochaPhantomJS.run(); }
+      else { mocha.run(); }
     </script>
 </body>
 </html>
