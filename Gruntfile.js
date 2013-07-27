@@ -7,8 +7,8 @@ module.exports = function(grunt) {
     jshint: {
       all: [
         'Gruntfile.js',
-        'tasks/*.js',
-        '<%= nodeunit.tests %>'
+        'pubsub-categories.js',
+        'spec/*.js'
       ],
       options: {
         jshintrc: '.jshintrc'
@@ -50,13 +50,14 @@ module.exports = function(grunt) {
 
 
   // These plugins provide necessary tasks.
-  // grunt.loadNpmTasks('grunt-contrib-jshint');
+  grunt.loadNpmTasks('grunt-contrib-jshint');
   grunt.loadNpmTasks('grunt-mocha');
 
 
   // Whenever the "test" task is run, first clean the "tmp" dir, then run this
   // plugin's task(s), then test the result.
   grunt.registerTask('test', ['mocha']);
+  grunt.registerTask('lint', ['jshint']);
 
   // By default, lint and run all tests.
   grunt.registerTask('default', ['test']);
