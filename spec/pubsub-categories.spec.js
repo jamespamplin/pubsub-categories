@@ -2,6 +2,8 @@
 
 var specs = function(PubSub) {
 
+    'use strict';
+
     var EventProvider = PubSub,
 
 
@@ -21,7 +23,7 @@ var specs = function(PubSub) {
             listener.topic = arguments[arguments.length - 1];
 
             if (expectedProperties) {
-                for (var prop in expectedProperties) { // need toEqual / toBe?
+                for (var prop in expectedProperties) { // need toEqual / to.equal?
                     expect(listener[prop]).toEqual(expectedProperties[prop], 'Unexpected "' + prop + '" for fired listener on topic "' + topic + '"');
                 }
             }
@@ -70,7 +72,7 @@ var specs = function(PubSub) {
 
             publish('testUnsubscribeAll');
 
-            expect(fired).toBe(false);
+            expect(fired).to.equal(false);
         });
 
 
@@ -91,55 +93,43 @@ var specs = function(PubSub) {
 
                 returned = publish(eventName);
 
-                expect(returned).toBe(true, 'unexpected return type');
-                expect(fired).toBe(true, 'Event listener never fired');
+                expect(returned).to.equal(true, 'unexpected return type');
+                expect(fired).to.equal(true, 'Event listener never fired');
 
             });
 
-            it('can publish an event (new thread)', function() {
+            it('can publish an event (async)', function(done) {
 
                 var eventName = 'testEvent',
-                fired = false,
                 returned = -1; // set to something unexpected
 
+                this.timeout(100);
+
                 subscribe(eventName, function() {
-                    fired = true;
+
+                    done();
                 });
 
-                runs(function() {
+                window.setTimeout(function() {
                     returned = publish(eventName);
-                });
+                    expect(returned).to.equal(true, 'unexpected return type');
+                }, 50);
 
-                waitsFor(function() {
-                    return fired;
-                }, 'Event listener never fired', 1000);
-
-                runs(function() {
-                    expect(returned).toBe(true, 'unexpected return type');
-                    expect(fired).toBe(true, 'Event listener never fired');
-                });
             });
 
 
             it('can publish an event with listener object context', function() {
 
-                var eventName = 'testEvent';
+                var eventName = 'testEvent', context = {};
 
                 subscribe(eventName, function() {
                     this.eventFired = true;
-                }, this);
+                }, context);
 
-                runs(function() {
-                    this.returns = publish(eventName);
-                });
+                publish(eventName);
 
-                waitsFor(function() {
-                    return this.eventFired;
-                }, 'Event listener never fired', 1000);
+                expect(context.eventFired).to.equal(true);
 
-                runs(function() {
-                    expect(this.returns).toBe(true, 'unexpected return type');
-                });
             });
 
 
@@ -149,7 +139,7 @@ var specs = function(PubSub) {
 
                 returns = publish(eventName);
 
-                expect(returns).toBe(undefined);
+                expect(returns).to.equal(undefined);
 
             });
 
@@ -163,11 +153,11 @@ var specs = function(PubSub) {
 
                 publish(topic);
 
-                expect(value).toBe(3);
+                expect(value).to.equal(3);
 
                 publish(topic);
 
-                expect(value).toBe(4);
+                expect(value).to.equal(4);
             });
 
             it('can publish an event with multiple parameters', function() {
@@ -187,11 +177,11 @@ var specs = function(PubSub) {
 
                 publish(topic, 4, 2);
 
-                expect(param1).toBe(4);
-                expect(param2).toBe(2);
-                expect(param3).toBe(topic);
-                expect(paramLength).toBe(3);
-                expect(value).toBe(3);
+                expect(param1).to.equal(4);
+                expect(param2).to.equal(2);
+                expect(param3).to.equal(topic);
+                expect(paramLength).to.equal(3);
+                expect(value).to.equal(3);
 
             });
 
@@ -205,11 +195,11 @@ var specs = function(PubSub) {
 
                 publish(topic);
 
-                expect(value).toBe(6);
+                expect(value).to.equal(6);
 
                 publish(topic);
 
-                expect(value).toBe(11);
+                expect(value).to.equal(11);
             });
 
 
@@ -226,13 +216,13 @@ var specs = function(PubSub) {
 
             publish('listener1');
 
-            expect(listeners.listener1.fireCount).toBe(1);
-            expect(listeners.listener2.fireCount).toBe(0);
+            expect(listeners.listener1.fireCount).to.equal(1);
+            expect(listeners.listener2.fireCount).to.equal(0);
 
             publish('listener2');
 
-            expect(listeners.listener1.fireCount).toBe(1);
-            expect(listeners.listener2.fireCount).toBe(1);
+            expect(listeners.listener1.fireCount).to.equal(1);
+            expect(listeners.listener2.fireCount).to.equal(1);
         });
 
         describe('unsubscribe', function() {
@@ -247,19 +237,19 @@ var specs = function(PubSub) {
 
                 PubSub.publish(topic);
 
-                expect(listener1.fireCount).toBe(1);
-                expect(listener2.fireCount).toBe(1);
+                expect(listener1.fireCount).to.equal(1);
+                expect(listener2.fireCount).to.equal(1);
 
-                expect(this.totalFireCount).toBe(2);
+                expect(this.totalFireCount).to.equal(2);
 
                 PubSub.unsubscribe(topic, listener1);
 
                 PubSub.publish(topic);
 
-                expect(listener1.fireCount).toBe(1);
-                expect(listener2.fireCount).toBe(2);
+                expect(listener1.fireCount).to.equal(1);
+                expect(listener2.fireCount).to.equal(2);
 
-                expect(this.totalFireCount).toBe(3);
+                expect(this.totalFireCount).to.equal(3);
 
             });
 
@@ -275,17 +265,17 @@ var specs = function(PubSub) {
 
                 PubSub.publish(topic);
 
-                expect(listener1.fireCount).toBe(1);
-                expect(listener2.fireCount).toBe(1);
+                expect(listener1.fireCount).to.equal(1);
+                expect(listener2.fireCount).to.equal(1);
 
-                expect(this.totalFireCount).toBe(2);
+                expect(this.totalFireCount).to.equal(2);
 
                 PubSub.publish(topic);
 
-                expect(listener1.fireCount).toBe(2);
-                expect(listener2.fireCount).toBe(1);
+                expect(listener1.fireCount).to.equal(2);
+                expect(listener2.fireCount).to.equal(1);
 
-                expect(this.totalFireCount).toBe(3);
+                expect(this.totalFireCount).to.equal(3);
             });
         });
 
@@ -447,7 +437,7 @@ var specs = function(PubSub) {
                 });
 
                 runs(function() {
-                    expect(value).toBe(10);
+                    expect(value).to.equal(10);
                 });
             });
 
@@ -471,7 +461,7 @@ var specs = function(PubSub) {
 
             context.publish(topic);
 
-            expect(this.totalFireCount).toBe(4);
+            expect(this.totalFireCount).to.equal(4);
         });
 
         xit('can subscribe to all event in context');
@@ -491,8 +481,8 @@ var specs = function(PubSub) {
 
             var ctx = PubSub.context(category, MyObject);
 
-            expect(typeof(MyObject.publish)).toBe('function');
-            expect(typeof(MyObject.subscribe)).toBe('function');
+            expect(typeof(MyObject.publish)).to.equal('function');
+            expect(typeof(MyObject.subscribe)).to.equal('function');
 
             MyObject.subscribe(topic, createTestListener(topic, this, { topic: categoryDotTopic }));
             PubSub.subscribe(topic, createTestListener(topic, this, { topic: categoryDotTopic }));
@@ -502,7 +492,7 @@ var specs = function(PubSub) {
             MyObject.publish(topic);
 
 
-            expect(this.totalFireCount).toBe(4, 'Unexpected fire count');
+            expect(this.totalFireCount).to.equal(4, 'Unexpected fire count');
         });
 
         it('can attach pubsub methods to object instances with "id"s', function() {
@@ -522,8 +512,8 @@ var specs = function(PubSub) {
 
             instance1 = new MyObject(instanceId);
 
-            expect(typeof(instance1.publish)).toBe('function');
-            expect(typeof(instance1.subscribe)).toBe('function');
+            expect(typeof(instance1.publish)).to.equal('function');
+            expect(typeof(instance1.subscribe)).to.equal('function');
 
             instance1.subscribe(topic, createTestListener(topic, this, { topic: categoryDotInstanceDotTopic }));
             MyObject.subscribe(topic,  createTestListener(topic, this, { topic: categoryDotInstanceDotTopic }));
@@ -535,7 +525,7 @@ var specs = function(PubSub) {
 
             instance1.publish(topic);
 
-            expect(this.totalFireCount).toBe(7, 'Unexpected fire count');
+            expect(this.totalFireCount).to.equal(7, 'Unexpected fire count');
         });
 
         it('can attach pubsub methods to object instances without "id"s', function() {
@@ -554,7 +544,7 @@ var specs = function(PubSub) {
 
             myInstance.subscribe(topic, function(topicName) {
                 topicInInstanceFired = true;
-                expect(topicName).toBe(categoryDotTopic);
+                expect(topicName).to.equal(categoryDotTopic);
             });
 
             MyObject.subscribe(topic,          createTestListener(topic, this, { order: 1, topic: categoryDotTopic }));
@@ -566,7 +556,7 @@ var specs = function(PubSub) {
 
             myInstance.publish(topic);
 
-            expect(this.totalFireCount).toBe(5, 'Unexpected fire count');
+            expect(this.totalFireCount).to.equal(5, 'Unexpected fire count');
         });
 
         it('can use instance as "this" in subscribers', function() {
@@ -581,13 +571,13 @@ var specs = function(PubSub) {
             topicFired = false;
 
             myInstance.subscribe(topic, function() {
-                expect(this).toBe(myInstance, '"this" was not instance');
+                expect(this).to.equal(myInstance, '"this" was not instance');
                 topicFired = true;
             });
 
             myInstance.publish(topic);
 
-            expect(topicFired).toBe(true, 'topic did not publish');
+            expect(topicFired).to.equal(true, 'topic did not publish');
         });
 
         it('can attach event namespace to objects', function() {
@@ -599,17 +589,17 @@ var specs = function(PubSub) {
 
             myInstance = new MyObject('tester');
 
-            expect(typeof(MyObject[namespace])).toBe('object');
-            expect(typeof(myInstance[namespace])).toBe('object');
-            expect(typeof(MyObject[namespace].publish)).toBe('function');
-            expect(typeof(MyObject[namespace].subscribe)).toBe('function');
-            expect(typeof(myInstance[namespace].publish)).toBe('function');
-            expect(typeof(myInstance[namespace].subscribe)).toBe('function');
+            expect(typeof(MyObject[namespace])).to.equal('object');
+            expect(typeof(myInstance[namespace])).to.equal('object');
+            expect(typeof(MyObject[namespace].publish)).to.equal('function');
+            expect(typeof(MyObject[namespace].subscribe)).to.equal('function');
+            expect(typeof(myInstance[namespace].publish)).to.equal('function');
+            expect(typeof(myInstance[namespace].subscribe)).to.equal('function');
 
-            expect(MyObject.publish).toBe(undefined);
-            expect(MyObject.subscribe).toBe(undefined);
-            expect(myInstance.publish).toBe(undefined);
-            expect(myInstance.subscribe).toBe(undefined);
+            expect(MyObject.publish).to.equal(undefined);
+            expect(MyObject.subscribe).to.equal(undefined);
+            expect(myInstance.publish).to.equal(undefined);
+            expect(myInstance.subscribe).to.equal(undefined);
 
             // note: "this" in listener will no longer be instance, bug?
         });
@@ -630,21 +620,21 @@ var specs = function(PubSub) {
 
             ctx.publish(topic);
 
-            expect(listener1.fireCount).toBe(1);
-            expect(listener2.fireCount).toBe(1);
+            expect(listener1.fireCount).to.equal(1);
+            expect(listener2.fireCount).to.equal(1);
 
-            expect(this.totalFireCount).toBe(2, 'Unexpected fire count');
+            expect(this.totalFireCount).to.equal(2, 'Unexpected fire count');
         });
     });
 
     describe('private contexts', function() {
         it('can create a private context', function() {
-            expect(typeof(PubSub)).toBe('function');
+            expect(typeof(PubSub)).to.equal('function');
 
             var privateContext = new PubSub();
 
-            expect(typeof(privateContext.publish)).toBe('function');
-            expect(typeof(privateContext.subscribe)).toBe('function');
+            expect(typeof(privateContext.publish)).to.equal('function');
+            expect(typeof(privateContext.subscribe)).to.equal('function');
         });
 
         it('can not fire global events', function() {
@@ -660,7 +650,7 @@ var specs = function(PubSub) {
 
             privateContext.publish(topic);
 
-            expect(topicFired).toBe(true, 'topic did not fire in private context');
+            expect(topicFired).to.equal(true, 'topic did not fire in private context');
 
         });
 
@@ -677,7 +667,7 @@ var specs = function(PubSub) {
 
             PubSub.publish(topic);
 
-            expect(topicFired).toBe(true, 'topic did not fire in global context');
+            expect(topicFired).to.equal(true, 'topic did not fire in global context');
         });
 
         it('can change category separator', function() {
@@ -692,11 +682,11 @@ var specs = function(PubSub) {
 
             eventContext.publish(category + '.' + topic);
 
-            expect(categoryFired).toBe(false);
+            expect(categoryFired).to.equal(false);
 
             eventContext.publish(category + '|' + topic);
 
-            expect(categoryFired).toBe(true);
+            expect(categoryFired).to.equal(true);
         });
     });
 
