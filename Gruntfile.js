@@ -83,15 +83,17 @@ module.exports = function(grunt) {
 
     lcov = grunt.file.read('coverage/lcov.info'),
 
-    cmd = grunt.util.spawn({ cmd: './node_modules/coveralls/bin/coveralls.js' }, function(error, result, code) {
-      // console.log('spawn', error, result, code);
+    coveralls = grunt.util.spawn({ cmd: './node_modules/coveralls/bin/coveralls.js' }, function(error, result, code) {
       if (error) {
         grunt.fail.fatal(error);
       }
       done();
     });
 
-    cmd.stdin.end(lcov);
+    coveralls.stdout.pipe(process.stdout);
+    coveralls.stderr.pipe(process.stderr);
+
+    coveralls.stdin.end(lcov);
 
   });
 
