@@ -1,5 +1,7 @@
 pubsub-categories
 ================
+[![Build Status](https://travis-ci.org/jamespamplin/pubsub-categories.png)](https://travis-ci.org/jamespamplin/pubsub-categories)
+
 A JavaScript Publish / Subscribe custom event model with hierarchical categories for event topics.
 
 Loosely coupled event logic. Reduce code by listening to categories of event topics.
