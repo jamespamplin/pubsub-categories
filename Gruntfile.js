@@ -112,6 +112,14 @@ module.exports = function(grunt) {
     },
 
 
+    watch: {
+      scripts: {
+        files: ['*.js', 'spec/**/*.js'],
+        tasks: ['test']
+      }
+    },
+
+
     mocha_phantomjs: {
       test: {
         src: [ 'spec/runner.html' ]
@@ -123,6 +131,7 @@ module.exports = function(grunt) {
 
   // These plugins provide necessary tasks.
   grunt.loadNpmTasks('grunt-contrib-jshint');
+  grunt.loadNpmTasks('grunt-contrib-watch');
   grunt.loadNpmTasks('grunt-mocha-phantomjs');
 
 
