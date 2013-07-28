@@ -1,6 +1,6 @@
 {
   "name": "pubsub-categories",
-  "version": "0.0.2",
+  "version": "0.1.0",
   "author": "James Pamplin <james@jamespamplin.com>",
   "description": "Categorised Event model of Publish/Subscribe",
   "main": "./pubsub-categories.js",
