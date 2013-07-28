@@ -77,6 +77,25 @@ module.exports = function(grunt) {
   });
 
 
+  // task to send coverage to coveralls.io
+  grunt.registerTask('coveralls', 'Sync coverage to coveralls.io', function() {
+    var done = this.async(),
+
+    lcov = grunt.file.read('coverage/lcov.info'),
+
+    cmd = grunt.util.spawn({ cmd: './node_modules/coveralls/bin/coveralls.js' }, function(error, result, code) {
+      // console.log('spawn', error, result, code);
+      if (error) {
+        grunt.fail.fatal(error);
+      }
+      done();
+    });
+
+    cmd.stdin.end(lcov);
+
+  });
+
+
   // Project configuration.
   grunt.initConfig({
     jshint: {
@@ -95,10 +114,6 @@ module.exports = function(grunt) {
       test: {
         src: [ 'spec/runner.html' ]
       }
-    },
-
-    phantom_cover: {
-      test: {}
     }
 
   });
@@ -111,6 +126,8 @@ module.exports = function(grunt) {
 
   grunt.registerTask('test', ['jshint', 'mocha_phantomjs', 'mocha_cover']);
   grunt.registerTask('cover', [ 'mocha_cover' ]);
+  grunt.registerTask('ci', [ 'test', 'coveralls' ]);
+
 
   // By default, lint and run all tests.
   grunt.registerTask('default', ['test']);
