@@ -260,6 +260,7 @@
                     self.unsubscribe(topic, listenerWrapper);
                     listener.apply(this, arguments);
                 };
+                listenerWrapper._ps_orig = listener;
 
                 return self.subscribe(topic, listenerWrapper, context);
             };
@@ -274,19 +275,24 @@
                     return true;
 
                 } else {
-                    var listeners = _listeners[topic], i, n;
+                    var listeners = _listeners[topic], i, n,
+
+                    matchesListener = function(l) {
+                        return l === listener || l._ps_orig === listener;
+                    };
+
                     if (listeners) {
                         if (listeners instanceof Array) {
                             n = listeners.length;
                             for (i = 0; i < n; i++) {
-                                if (listeners[i] === listener) {
+                                if (matchesListener(listeners[i])) {
                                     listeners.splice(i, 1);
                                     return true;
                                 }
                             }
 
-                        } else if (listeners === listener) {
-                            listeners = undefined;
+                        } else if (matchesListener(listeners)) {
+                            _listeners[topic] = undefined;
                             return true;
                         }
                     }

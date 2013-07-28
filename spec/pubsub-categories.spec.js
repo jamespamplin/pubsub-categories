@@ -227,7 +227,25 @@ var specs = function(PubSub) {
 
         describe('unsubscribe', function() {
             it('can unsubscribe from a topic', function() {
-                var topic = 'testTopic',
+                var topic = 'testUnsubscribeTopic',
+
+                listener = sinon.spy();
+
+                PubSub.subscribe(topic, listener);
+
+                PubSub.publish(topic);
+
+                expect(listener.callCount).to.equal(1);
+
+                expect(PubSub.unsubscribe(topic, listener)).to.equal(true);
+
+                PubSub.publish(topic);
+
+                expect(listener.callCount).to.equal(1);
+            });
+
+            it('can unsubscribe one listener from a topic (multiple)', function() {
+                var topic = 'testUnsubscribeTopic2',
 
                 listener1 = sinon.spy(),
                 listener2 = sinon.spy();
@@ -240,7 +258,7 @@ var specs = function(PubSub) {
                 expect(listener1.callCount).to.equal(1);
                 expect(listener2.callCount).to.equal(1);
 
-                PubSub.unsubscribe(topic, listener1);
+                expect(PubSub.unsubscribe(topic, listener1)).to.equal(true);
 
                 PubSub.publish(topic);
 
@@ -249,7 +267,28 @@ var specs = function(PubSub) {
 
             });
 
+            it('can not unsubscribe', function() {
+                var topic = 'testUnsubscribeError',
+                listener = sinon.spy(),
+                listener2 = sinon.spy();
 
+                PubSub.subscribe('somethingElse', listener);
+
+                expect(PubSub.unsubscribe(topic, listener)).to.equal(false);
+
+                PubSub.publish(topic);
+
+                expect(listener.called).to.equal(false);
+
+                PubSub.subscribe(topic, listener2);
+
+                expect(PubSub.unsubscribe(topic, listener)).to.equal(false);
+
+            });
+
+        });
+
+        describe('subscribeOnce', function() {
             it('can subscribe once to an event', function() {
                 var topic = 'testTopic',
 
@@ -269,6 +308,19 @@ var specs = function(PubSub) {
                 expect(listener1.callCount).to.equal(2);
                 expect(listener2.callCount).to.equal(1);
 
+            });
+
+            it('can unsubscribe a subscribeOnce listener', function() {
+                var topic = 'testUnsubscribeOnce',
+                listener = sinon.spy();
+
+                PubSub.subscribeOnce(topic, listener);
+
+                PubSub.unsubscribe(topic, listener);
+
+                PubSub.publish(topic);
+
+                expect(listener.callCount).to.equal(0);
             });
         });
 
