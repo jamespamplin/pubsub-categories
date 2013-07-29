@@ -1,13 +1,10 @@
-/*global describe,beforeEach,sinon,it,expect,window, define */
+/*global describe,beforeEach,sinon,it,expect,window,define */
 
 var specs = function(PubSub) {
 
     'use strict';
 
-    var EventProvider = PubSub,
-
-
-    createTestListener = function(topic, testRunner, expectedProperties) {
+    var createTestListener = function(topic, testRunner, expectedProperties) {
 
         if (isNaN(testRunner.totalFireCount)) { testRunner.totalFireCount = 0; }
 
@@ -32,33 +29,17 @@ var specs = function(PubSub) {
         listener.fireCount = 0;
 
         return listener;
-    },
-
-
-    TestListener = function(testRunner, order) {
-        this.fireCount = 0;
-        this.testRunner = testRunner;
-        this.expectedOrder = order;
     };
 
-    TestListener.prototype.fire = function(params, eventName) {
-        this.fireCount++;
-        this.testRunner.totalFireCount++;
-        this.order = this.testRunner.totalFireCount;
-
-        this.lastArgs = arguments;
-        this.lastEvent = eventName;
-        this.lastParams = params;
-    };
 
     beforeEach(function() {
-        EventProvider.unsubscribe('all'); // reset global event provider
+        PubSub.unsubscribe('all'); // reset global event provider
     });
 
     describe('global context', function() {
 
-        var publish = EventProvider.publish, // easy access aliases for Global pub/sub
-        subscribe = EventProvider.subscribe;
+        var publish = PubSub.publish, // easy access aliases for Global pub/sub
+        subscribe = PubSub.subscribe;
 
 
         it('can unsubscribe all listeners', function() { // tested first as used for test cleanup
@@ -68,7 +49,7 @@ var specs = function(PubSub) {
                 fired = true;
             });
 
-            EventProvider.unsubscribe('all');
+            PubSub.unsubscribe('all');
 
             publish('testUnsubscribeAll');
 
@@ -328,84 +309,75 @@ var specs = function(PubSub) {
 
         describe('publish hierarchical categories in global context', function() {
 
-            it('can publish events in hierarchy: 1 category level', function() {
+            // Test runner for category specs
+            function testOrderedCategories(topicToPublish, orderedTopics) {
 
-                this.totalFireCount = 0;
+                var topics = {},
+                publishedListeners = [],
 
-                var key, listener, listeners = {
-                    'root.testEvent':   new TestListener(this, 1),
-                    'testEvent':        new TestListener(this, 2),
-                    'root':             new TestListener(this, 3),
-                    'all':              new TestListener(this, 4)
+                loop = function(i, topic, listener) {
+                    topic = orderedTopics[i];
+
+                    if (topic) {
+                        listener = sinon.spy(function() {
+                            publishedListeners.push(listener);
+                        });
+                        listener.displayName = 'spy ' + topic;
+                        topics[topic] = listener;
+                        loop(i + 1);
+                    }
                 };
 
-                for(key in listeners) {
-                    listener = listeners[key];
-                    subscribe(key, listener.fire, listener);
+                loop(0);
+
+                subscribe(topics);
+
+                publish(topicToPublish);
+
+                for (var i = 0, topic; (topic = orderedTopics[i]); i++) {
+                    expect(topics[topic].called).to.equal(true, 'listener on topic not called: ' + topic);
+                    expect(topics[topic].calledWith(topicToPublish)).to.equal(true, 'unexpected call parameters for listener on topic: ' + topic);
+                    expect(topics[topic]).to.equal(publishedListeners[i], 'incorrect fire order on topic: ' + topic);
+                    expect(topics[topic].calledOnce).to.equal(true, 'listener should be called once on topic: ' + topic);
                 }
 
-                var param = 'testParam1',
-                eventName = 'root.testEvent';
+                expect(publishedListeners.length).to.equal(orderedTopics.length, 'incorrect total fire count');
+            }
 
-                publish(eventName, param);
 
-                for(key in listeners) {
-                    listener = listeners[key];
+            it('can publish events in hierarchy: 1 category level', function() {
 
-                    expect(listener.fireCount).to.not.equal(0, 'fire count error - listener "' + key + '" never fired');
-                    expect(listener.fireCount).to.equal(1, 'unexpected fire count for listener "' + key + '"');
-                    expect(listener.order).to.equal(listener.expectedOrder, 'incorrect order for listener "' + key + '"');
-                    expect(listener.lastEvent).to.equal(eventName, 'incorrect published topic for listener "' + key + '"');
-                    expect(listener.lastParams).to.equal(param, 'incorrect event arguments for listener "' + key + '"');
-                }
+                var orderedTopics = [
+                    'root.testEvent',
+                    'testEvent',
+                    'root',
+                    'all'
+                ];
 
-                expect(this.totalFireCount).to.equal(4, 'unexpected total fire count');
+                testOrderedCategories('root.testEvent', orderedTopics);
 
             });
 
             it('can publish events in hierarchy: 2 category levels', function() {
 
-                this.totalFireCount = 0;
+                var orderedTopics = [
+                    'trunk.branch.leaf',
+                    'trunk.leaf',
+                    'leaf',
+                    'trunk.branch',
+                    'branch',
+                    'trunk',
+                    'all'
+                ];
 
-                var key, listener, listeners = {
-                    'trunk.branch.leaf':         new TestListener(this, 1),
-                    'trunk.leaf':                new TestListener(this, 2),
-                    'leaf':                      new TestListener(this, 3),
-                    'trunk.branch':              new TestListener(this, 4),
-                    'branch':                    new TestListener(this, 5),
-                    'trunk':                     new TestListener(this, 6),
-                    'all':                       new TestListener(this, 7)
-                };
+                testOrderedCategories('trunk.branch.leaf', orderedTopics);
 
-                for(key in listeners) {
-                    listener = listeners[key];
-                    subscribe(key, listener.fire, listener);
-                }
-
-                var params = ['testParam1'],
-                eventName = 'trunk.branch.leaf';
-
-                publish(eventName, 'testParam1');
-
-                for(key in listeners) {
-                    listener = listeners[key];
-
-                    expect(listener.fireCount).to.not.equal(0, 'fire count error - listener "' + key + '" never fired');
-                    expect(listener.fireCount).to.equal(1, 'unexpected fire count for listener "' + key + '"');
-                    expect(listener.order).to.equal(listener.expectedOrder, 'incorrect order for listener "' + key + '"');
-                    expect(listener.lastEvent).to.equal(eventName, 'incorrect published topic for listener "' + key + '"');
-                    expect(listener.lastParams).to.equal(params[0], 'incorrect event arguments for listener "' + key + '"');
-                }
-
-                expect(this.totalFireCount).to.equal(7, 'unexpected total fire count');
             });
 
 
             it('can publish events in hierarchy: 3 category levels', function() {
 
-                this.totalFireCount = 0;
-
-                var orderedListenerTopics = [ // to listen for in expected order
+                var orderedTopics = [
                     'one.two.three.four',
                     'one.two.four',
                     'one.four',
@@ -417,35 +389,9 @@ var specs = function(PubSub) {
                     'two',
                     'one',
                     'all'
-                ],
+                ];
 
-                listeners = {},
-
-                listener, key;
-
-                for (var i = 0, topic; (topic = orderedListenerTopics[i]); i++) {
-                    listener = new TestListener(this, i + 1);
-                    subscribe(topic, listener.fire, listener);
-                    listeners[topic] = listener;
-                }
-
-
-                var param = 'testParam1',
-                eventName = 'one.two.three.four';
-
-                publish(eventName, param);
-
-                for(key in listeners) {
-                    listener = listeners[key];
-
-                    expect(listener.fireCount).to.not.equal(0, 'fire count error - listener "' + key + '" never fired');
-                    expect(listener.fireCount).to.equal(1, 'unexpected fire count for listener "' + key + '"');
-                    expect(listener.order).to.equal(listener.expectedOrder, 'incorrect order for listener "' + key + '"');
-                    expect(listener.lastEvent).to.equal(eventName, 'incorrect published topic for listener "' + key + '"');
-                    expect(listener.lastParams).to.equal(param, 'incorrect event arguments for listener "' + key + '"');
-                }
-
-                expect(this.totalFireCount).to.equal(orderedListenerTopics.length, 'unexpected total fire count');
+                testOrderedCategories('one.two.three.four', orderedTopics);
 
             });
 
