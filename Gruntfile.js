@@ -122,7 +122,7 @@ module.exports = function(grunt) {
 
     mocha_phantomjs: {
       test: {
-        src: [ 'spec/runner.html' ]
+        src: [ 'spec/runner.html', 'spec/runner.require.html' ]
       }
     }
 

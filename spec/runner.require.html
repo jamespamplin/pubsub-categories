@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="Content-type" content="text/html; charset=utf-8">
+    <title>Mocha Test</title>
+    <link rel="stylesheet" href="../node_modules/mocha/mocha.css" type="text/css" charset="utf-8" />
+</head>
+<body>
+    <!-- Required for browser reporter -->
+    <div id="mocha"></div>
+
+    <!-- mocha -->
+    <script src="../node_modules/mocha/mocha.js" type="text/javascript" charset="utf-8"></script>
+
+    <!-- vendor scripts -->
+    <script src="../node_modules/chai/chai.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../vendor/sinon-1.7.3.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../vendor/require-2.1.8.js"></script>
+
+    <!-- setup -->
+    <script type="text/javascript" charset="utf-8">
+        mocha.ui('bdd');
+        expect = chai.expect;
+    </script>
+
+
+    <!-- Spec files -->
+    <script src="pubsub-categories.spec.js" type="text/javascript" charset="utf-8"></script>
+    <script src="require.spec.js" type="text/javascript" charset="utf-8"></script>
+
+
+    <script type="text/javascript" charset="utf-8">
+      if (window.mochaPhantomJS) { mochaPhantomJS.run(); }
+      else { mocha.run(); }
+    </script>
+</body>
+</html>
