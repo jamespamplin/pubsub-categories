@@ -1,3 +1,9 @@
+/*!
+ * pubsub-categories - Copyright (c) James Pamplin 2013
+ * https://github.com/jamespamplin/pubsub-categories
+ * MIT license
+ */
+
 /**
  * @module pubsub-categories
  *
@@ -8,7 +14,7 @@
 
 (function(global) {
 
-    'use strict'; // TODO performance check
+    'use strict';
 
     var PubSub = function(SEPARATOR) {
         SEPARATOR = SEPARATOR || '.';

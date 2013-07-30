@@ -100,6 +100,8 @@ module.exports = function(grunt) {
 
   // Project configuration.
   grunt.initConfig({
+    pkg: grunt.file.readJSON('package.json'),
+
     jshint: {
       all: [
         'Gruntfile.js',
@@ -124,6 +126,24 @@ module.exports = function(grunt) {
       test: {
         src: [ 'spec/runner.html', 'spec/runner.require.html' ]
       }
+    },
+
+
+    uglify: {
+      build: {
+        options: {
+          banner:
+            '/*!\n' +
+            ' * <%= pkg.name %> v<%= pkg.version %> - Copyright (c) James Pamplin <%= grunt.template.today("yyyy") %>\n' +
+            ' * https://github.com/jamespamplin/pubsub-categories\n' +
+            ' * MIT license\n' +
+            ' */\n',
+          report: 'gzip'
+        },
+        files: {
+          'pubsub-categories.min.js': ['pubsub-categories.js']
+        }
+      }
     }
 
   });
@@ -131,6 +151,7 @@ module.exports = function(grunt) {
 
   // These plugins provide necessary tasks.
   grunt.loadNpmTasks('grunt-contrib-jshint');
+  grunt.loadNpmTasks('grunt-contrib-uglify');
   grunt.loadNpmTasks('grunt-contrib-watch');
   grunt.loadNpmTasks('grunt-mocha-phantomjs');
 
@@ -138,6 +159,7 @@ module.exports = function(grunt) {
   grunt.registerTask('test', ['jshint', 'mocha_phantomjs', 'mocha_cover']);
   grunt.registerTask('cover', [ 'mocha_cover' ]);
   grunt.registerTask('ci', [ 'test', 'coveralls' ]);
+  grunt.registerTask('build', [ 'uglify' ]);
 
 
   // By default, lint and run all tests.
