@@ -1,7 +1,9 @@
 /*!
- * pubsub-categories - Copyright (c) James Pamplin 2013
+ * pubsub-categories
  * https://github.com/jamespamplin/pubsub-categories
- * MIT license
+ *
+ * Copyright (c) 2013 James Pamplin
+ * @license MIT
  */
 
 /**

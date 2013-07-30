@@ -1,3 +1,11 @@
+/*!
+ * pubsub-categories
+ * https://github.com/jamespamplin/pubsub-categories
+ *
+ * Copyright (c) 2013 James Pamplin
+ * @license MIT
+ */
+
 'use strict';
 
 module.exports = function(grunt) {
@@ -134,9 +142,10 @@ module.exports = function(grunt) {
         options: {
           banner:
             '/*!\n' +
-            ' * <%= pkg.name %> v<%= pkg.version %> - Copyright (c) James Pamplin <%= grunt.template.today("yyyy") %>\n' +
-            ' * https://github.com/jamespamplin/pubsub-categories\n' +
-            ' * MIT license\n' +
+            ' * <%= pkg.name %> v<%= pkg.version %>\n' +
+            ' * https://github.com/jamespamplin/pubsub-categories\n *\n' +
+            ' * Copyright (c) James Pamplin <%= grunt.template.today("yyyy") %>\n' +
+            ' * @license MIT\n' +
             ' */\n',
           report: 'gzip'
         },
