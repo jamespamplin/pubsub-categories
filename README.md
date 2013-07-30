@@ -31,10 +31,6 @@ Features
 - Subscribe once to an event.
 
 
-### Upcoming:
-- Minified build
-
-
 
 Usage
 -----
@@ -213,7 +209,3 @@ widgetTwo.doSomethingElse();
 All published topics are prefixed with the context name (category).
 Instance `id`'s are appended to the topic name.
 
-```javascript
-// Method signature planning:
-PubSub.context = function(category, objectContext, namespace, idKey);
-```
