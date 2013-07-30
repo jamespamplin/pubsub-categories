@@ -1,35 +1,10 @@
 /*global describe,beforeEach,sinon,it,expect,window,define */
+/* jshint -W024 */
+/* jshint expr:true */
 
 var specs = function(PubSub) {
 
     'use strict';
-
-    var createTestListener = function(topic, testRunner, expectedProperties) {
-
-        if (isNaN(testRunner.totalFireCount)) { testRunner.totalFireCount = 0; }
-
-        var listener = function() {
-            testRunner.totalFireCount++;
-
-            listener.fireCount++;
-            listener.order = testRunner.totalFireCount;
-
-            listener.args = arguments;
-            listener.params = Array.prototype.slice.call(arguments, 0, arguments.length - 1);
-            listener.context = this;
-            listener.topic = arguments[arguments.length - 1];
-
-            if (expectedProperties) {
-                for (var prop in expectedProperties) { // need to.equal / to.equal?
-                    expect(listener[prop]).to.equal(expectedProperties[prop], 'Unexpected "' + prop + '" for fired listener on topic "' + topic + '"');
-                }
-            }
-        };
-
-        listener.fireCount = 0;
-
-        return listener;
-    };
 
 
     beforeEach(function() {
@@ -183,27 +158,25 @@ var specs = function(PubSub) {
                 expect(value).to.equal(11);
             });
 
-
-
         });
 
         it('can subscribe to map of listeners', function() {
             var listeners = {
-                'listener1': createTestListener('listener1', this),
-                'listener2': createTestListener('listener2', this)
+                'listener1': sinon.spy(),
+                'listener2': sinon.spy()
             };
 
             subscribe(listeners);
 
             publish('listener1');
 
-            expect(listeners.listener1.fireCount).to.equal(1);
-            expect(listeners.listener2.fireCount).to.equal(0);
+            expect(listeners.listener1.calledOnce).to.be.true;
+            expect(listeners.listener2.called).to.be.false;
 
             publish('listener2');
 
-            expect(listeners.listener1.fireCount).to.equal(1);
-            expect(listeners.listener2.fireCount).to.equal(1);
+            expect(listeners.listener1.calledOnce).to.be.true;
+            expect(listeners.listener2.calledOnce).to.be.true;
         });
 
         describe('unsubscribe', function() {
@@ -427,19 +400,32 @@ var specs = function(PubSub) {
 
         it('can publish a context event', function() {
             var category = 'testCategory',
-            context = PubSub.context(category);
-            var topic = 'testTopic',
-            categoryDotTopic = category + '.' + topic;
-            this.totalFireCount = 0;
+            context = PubSub.context(category),
+            topic = 'testTopic',
+            categoryDotTopic = category + '.' + topic,
+            // this.totalFireCount = 0,
 
-            context.subscribe(topic, createTestListener(topic, this, { topic: categoryDotTopic }));
-            PubSub.subscribe(topic, createTestListener(topic, this, { topic: categoryDotTopic }));
-            PubSub.subscribe(category, createTestListener(topic, this, { topic: categoryDotTopic }));
-            PubSub.subscribe('all', createTestListener(topic, this, { topic: categoryDotTopic }));
+            listener1 = sinon.spy(),
+            listener2 = sinon.spy(),
+            listener3 = sinon.spy(),
+            listener4 = sinon.spy();
+
+            context.subscribe(topic, listener1);
+            PubSub.subscribe(topic, listener2);
+            PubSub.subscribe(category, listener3);
+            PubSub.subscribe('all', listener4);
 
             context.publish(topic);
 
-            expect(this.totalFireCount).to.equal(4);
+            expect(listener1.calledOnce).to.be.true;
+            expect(listener2.calledOnce).to.be.true;
+            expect(listener3.calledOnce).to.be.true;
+            expect(listener4.calledOnce).to.be.true;
+
+            expect(listener2.calledAfter(listener1)).to.be.true;
+            expect(listener3.calledAfter(listener2)).to.be.true;
+            expect(listener4.calledAfter(listener3)).to.be.true;
+
         });
 
         // xit('can subscribe to all event in context');
@@ -453,6 +439,11 @@ var specs = function(PubSub) {
             topic = 'testTopic',
             categoryDotTopic = category + '.' + topic,
 
+            listener1 = sinon.spy(),
+            listener2 = sinon.spy(),
+            listener3 = sinon.spy(),
+            listener4 = sinon.spy(),
+
 
             MyObject = function() {}; // constructor
             MyObject.prototype.testFn = function() {};
@@ -464,15 +455,21 @@ var specs = function(PubSub) {
             expect(typeof(MyObject.publish)).to.equal('function');
             expect(typeof(MyObject.subscribe)).to.equal('function');
 
-            MyObject.subscribe(topic, createTestListener(topic, this, { topic: categoryDotTopic }));
-            PubSub.subscribe(topic, createTestListener(topic, this, { topic: categoryDotTopic }));
-            PubSub.subscribe(category, createTestListener(topic, this, { topic: categoryDotTopic }));
-            PubSub.subscribe('all', createTestListener(topic, this, { topic: categoryDotTopic }));
+            MyObject.subscribe(topic, listener1);
+            PubSub.subscribe(topic, listener2);
+            PubSub.subscribe(category, listener3);
+            PubSub.subscribe('all', listener4);
 
             MyObject.publish(topic);
 
+            expect(listener1.calledOnce).to.be.true;
+            expect(listener2.calledOnce).to.be.true;
+            expect(listener3.calledOnce).to.be.true;
+            expect(listener4.calledOnce).to.be.true;
 
-            expect(this.totalFireCount).to.equal(4, 'Unexpected fire count');
+            expect(listener2.calledAfter(listener1)).to.be.true;
+            expect(listener3.calledAfter(listener2)).to.be.true;
+            expect(listener4.calledAfter(listener3)).to.be.true;
         });
 
         it('can attach pubsub methods to object instances with "id"s', function() {
@@ -486,26 +483,38 @@ var specs = function(PubSub) {
             // Class def
             MyObject = function(id) { this.id = id; this.testInst = 'test'; }; // constructor
             MyObject.prototype.testFn = function() {};
-            this.totalFireCount = 0;
+
             // Create Context
             var ctx = PubSub.context(category, MyObject),
 
-            instance1 = new MyObject(instanceId);
+            instance1 = new MyObject(instanceId),
+
+            listeners = [],
+            i;
+
+            for (i = 0; i < 7; i++) {
+                listeners[i] = sinon.spy();
+            }
 
             expect(typeof(instance1.publish)).to.equal('function');
             expect(typeof(instance1.subscribe)).to.equal('function');
 
-            instance1.subscribe(topic, createTestListener(topic, this, { topic: categoryDotInstanceDotTopic }));
-            MyObject.subscribe(topic,  createTestListener(topic, this, { topic: categoryDotInstanceDotTopic }));
-            PubSub.subscribe(topic,    createTestListener(topic, this, { topic: categoryDotInstanceDotTopic }));
-            PubSub.subscribe(category, createTestListener(topic, this, { topic: categoryDotInstanceDotTopic }));
-            PubSub.subscribe(categoryDotTopic, createTestListener(topic, this, { topic: categoryDotInstanceDotTopic }));
-            PubSub.subscribe(categoryDotInstanceDotTopic, createTestListener(topic, this, { topic: categoryDotInstanceDotTopic }));
-            PubSub.subscribe('all', createTestListener(topic, this, { topic: categoryDotInstanceDotTopic }));
+            instance1.subscribe(topic, listeners[0]);
+            PubSub.subscribe(categoryDotInstanceDotTopic, listeners[1]);
+            PubSub.subscribe(categoryDotTopic, listeners[2]);
+            MyObject.subscribe(topic,  listeners[3]);
+            PubSub.subscribe(topic,    listeners[4]);
+            PubSub.subscribe(category, listeners[5]);
+            PubSub.subscribe('all', listeners[6]);
 
             instance1.publish(topic);
 
-            expect(this.totalFireCount).to.equal(7, 'Unexpected fire count');
+            for (i = 0; i < 7; i++) {
+                expect(listeners[i].calledOnce, 'listeners[' + i +'].calledOnce').to.be.true;
+                if (i > 0) {
+                    expect(listeners[i].calledAfter(listeners[i - 1]), 'listeners[' + i +'].calledAfter').to.be.true;
+                }
+            }
         });
 
         it('can attach pubsub methods to object instances without "id"s', function() {
@@ -519,26 +528,31 @@ var specs = function(PubSub) {
 
             // Create Context
             var ctx = PubSub.context(category, MyObject),
-
+            listeners = [],
+            i,
             myInstance = new MyObject();
 
-            this.totalFireCount = 0;
+            for (i = 0; i < 6; i++) {
+                listeners[i] = sinon.spy();
+            }
 
-            myInstance.subscribe(topic, function(topicName) {
-                // topicInInstanceFired = true;
-                expect(topicName).to.equal(categoryDotTopic);
-            });
+            myInstance.subscribe(topic,        listeners[0]);
+            MyObject.subscribe(topic,          listeners[1]);
+            PubSub.subscribe(categoryDotTopic, listeners[2]);
+            PubSub.subscribe(topic,            listeners[3]);
+            PubSub.subscribe(category,         listeners[4]);
+            PubSub.subscribe('all',            listeners[5]);
 
-            MyObject.subscribe(topic,          createTestListener(topic, this, { order: 1, topic: categoryDotTopic }));
-            PubSub.subscribe(topic,            createTestListener(topic, this, { order: 3, topic: categoryDotTopic }));
-            PubSub.subscribe(category,         createTestListener(category, this, { order: 4, topic: categoryDotTopic }));
-            PubSub.subscribe('all',            createTestListener('all', this, { order: 5, topic: categoryDotTopic }));
-
-            PubSub.subscribe(categoryDotTopic, createTestListener(topic, this, { order: 2, topic: categoryDotTopic }));
 
             myInstance.publish(topic);
 
-            expect(this.totalFireCount).to.equal(5, 'Unexpected fire count');
+
+            for (i = 0; i < 6; i++) {
+                expect(listeners[i].calledOnce, 'listeners[' + i +'].calledOnce').to.be.true;
+                if (i > 0) {
+                    expect(listeners[i].calledAfter(listeners[i - 1]), 'listeners[' + i +'].calledAfter').to.be.true;
+                }
+            }
         });
 
         it('can use instance as "this" in subscribers', function() {
@@ -592,8 +606,8 @@ var specs = function(PubSub) {
             topic = 'testTopic',
             categoryDotTopic = category + '.' + topic,
 
-            listener1 = createTestListener(topic, this, { topic: categoryDotTopic }),
-            listener2 = createTestListener(topic, this, { topic: categoryDotTopic }),
+            listener1 = sinon.spy(),
+            listener2 = sinon.spy(),
 
             ctx = PubSub.context(category);
 
@@ -604,10 +618,8 @@ var specs = function(PubSub) {
 
             ctx.publish(topic);
 
-            expect(listener1.fireCount).to.equal(1);
-            expect(listener2.fireCount).to.equal(1);
-
-            expect(this.totalFireCount).to.equal(2, 'Unexpected fire count');
+            expect(listener1.calledOnce).to.be.true;
+            expect(listener2.calledOnce).to.be.true;
         });
     });
 
