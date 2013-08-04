@@ -49,7 +49,7 @@ var specs = function(PubSub) {
 
                 returned = publish(eventName);
 
-                expect(returned).to.equal(true, 'unexpected return type');
+                // expect(returned).to.equal(true, 'unexpected return type');
                 expect(fired).to.equal(true, 'Event listener never fired');
 
             });
@@ -68,7 +68,7 @@ var specs = function(PubSub) {
 
                 window.setTimeout(function() {
                     returned = publish(eventName);
-                    expect(returned).to.equal(true, 'unexpected return type');
+                    // expect(returned).to.equal(true, 'unexpected return type');
                 }, 50);
 
             });
@@ -280,119 +280,7 @@ var specs = function(PubSub) {
 
 
 
-        describe('publish hierarchical categories in global context', function() {
 
-            // Test runner for category specs
-            function testOrderedCategories(topicToPublish, orderedTopics) {
-
-                var topics = {},
-                publishedListeners = [],
-
-                loop = function(i, topic, listener) {
-                    topic = orderedTopics[i];
-
-                    if (topic) {
-                        listener = sinon.spy(function() {
-                            publishedListeners.push(listener);
-                        });
-                        listener.displayName = 'spy ' + topic;
-                        topics[topic] = listener;
-                        loop(i + 1);
-                    }
-                };
-
-                loop(0);
-
-                subscribe(topics);
-
-                publish(topicToPublish);
-
-                for (var i = 0, topic; (topic = orderedTopics[i]); i++) {
-                    expect(topics[topic].called).to.equal(true, 'listener on topic not called: ' + topic);
-                    expect(topics[topic].calledWith(topicToPublish)).to.equal(true, 'unexpected call parameters for listener on topic: ' + topic);
-                    expect(topics[topic]).to.equal(publishedListeners[i], 'incorrect fire order on topic: ' + topic);
-                    expect(topics[topic].calledOnce).to.equal(true, 'listener should be called once on topic: ' + topic);
-                }
-
-                expect(publishedListeners.length).to.equal(orderedTopics.length, 'incorrect total fire count');
-            }
-
-
-            it('can publish events in hierarchy: 1 category level', function() {
-
-                var orderedTopics = [
-                    'root.testEvent',
-                    'testEvent',
-                    'root',
-                    'all'
-                ];
-
-                testOrderedCategories('root.testEvent', orderedTopics);
-
-            });
-
-            it('can publish events in hierarchy: 2 category levels', function() {
-
-                var orderedTopics = [
-                    'trunk.branch.leaf',
-                    'trunk.leaf',
-                    'leaf',
-                    'trunk.branch',
-                    'branch',
-                    'trunk',
-                    'all'
-                ];
-
-                testOrderedCategories('trunk.branch.leaf', orderedTopics);
-
-            });
-
-
-            it('can publish events in hierarchy: 3 category levels', function() {
-
-                var orderedTopics = [
-                    'one.two.three.four',
-                    'one.two.four',
-                    'one.four',
-                    'four',
-                    'one.two.three',
-                    'one.three',
-                    'three',
-                    'one.two',
-                    'two',
-                    'one',
-                    'all'
-                ];
-
-                testOrderedCategories('one.two.three.four', orderedTopics);
-
-            });
-
-            it('can stop propagation when in hierarchy', function() {
-                var totalFireCount = 0,
-                topic = 'one.two.three.four',
-                value = 1,
-
-                listeners = { // to listen for in expected order
-                    'one.two.three.four': function() { value += 2; },
-                    'four': function() { value += 3; },
-                    'one.two.three': function() { value += 4; return false; }, // should stop here
-                    'one': function() { value += 5; }
-                };
-
-
-                for(var key in listeners) {
-                    var listener = listeners[key];
-                    subscribe(key, listener);
-                }
-
-
-                publish(topic);
-
-                expect(value).to.equal(10);
-            });
-
-        });
 
     });
 

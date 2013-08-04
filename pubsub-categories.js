@@ -23,70 +23,6 @@
 
         var _listeners = {},
 
-        _tree = {},
-
-
-        getTreeBranches = function(topic) { // trunk.branch.leaf
-            var branches = _tree[topic];
-
-            if (branches === undefined) { // lazy cache / init
-
-                var lastIdx = topic.lastIndexOf(SEPARATOR);
-
-                if (lastIdx === -1) {
-                    branches = false; // leaf
-
-                } else {
-                    var category = topic.substring(0, lastIdx), // trunk.branch
-                    suffix = topic.substring(lastIdx + 1), // leaf
-
-                    // trunk.leaf
-                    nextIndex = category.lastIndexOf(SEPARATOR),
-                    nextCategoryForSuffix = (nextIndex === -1) ? suffix : category.substring(0, nextIndex + 1) + suffix;
-
-                    branches = [ category, nextCategoryForSuffix ];
-                }
-
-                _tree[topic] = branches;
-            }
-
-            return branches;
-        },
-
-        publishRoot = function(topic, args, context) {
-            var branches = getTreeBranches(topic),
-
-            returns = fire(topic, args, context);
-
-            if (returns !== false && branches) {
-
-                returns = fireRightBranch(topic, args, branches, context); // fire all right hand branches
-
-                if (returns !== false) {
-
-                    returns = publishRoot(branches[0], args, context); // fire category
-                }
-            }
-
-            return returns;
-        },
-
-        fireRightBranch = function(topic, args, branches, context) {
-            branches = branches || getTreeBranches(topic);
-
-            var right = branches && branches[1],
-            returns;
-
-            if (right) {
-                returns = fire(right, args, context);
-
-                if (returns !== false) {
-                    returns = fireRightBranch(right, args);
-                }
-            }
-            return returns;
-        },
-
 
         /**
          * Fire topic
@@ -132,6 +68,47 @@
         },
 
 
+        publishParents = function(parents, topic, base, message, fullTopicString, context) {
+            fire(topic.concat(base).join(SEPARATOR), message, context);
+
+
+            if (topic[1]) {
+                var first = topic.shift();
+                if (parents[0]) {
+                    publishParents([], parents.slice(0), topic.concat(base), message, context);
+                }
+                parents.push(first);
+
+                publishParents(parents, topic, base, message, fullTopicString, context);
+
+            } else if (parents[0]) {
+                publishParents([], parents, base, message, fullTopicString, context);
+            }
+
+        },
+
+
+        publishCategories = function(parents, topic, message, fullTopicString, context) {
+            fire(topic.join(SEPARATOR), message, context);
+
+
+            if (topic[1]) { // categories
+                var first = topic.shift();
+
+
+                if (parents[0]) {
+                    publishParents([], parents.slice(0), topic, message, fullTopicString, context);
+                }
+
+                parents.push(first);
+
+                publishCategories(parents, topic, message, fullTopicString, context);
+
+            } else if (parents[0]) {
+                publishCategories([], parents, message, fullTopicString, context);
+            }
+
+        },
 
 
 
@@ -185,16 +162,19 @@
              */
             this.publish = function(topic) { // args[1..n] become event params
 
-                var returns, args = Array.prototype.slice.call(arguments);
+                var args = Array.prototype.slice.call(arguments);
 
                 topic = getFullCategoryTopicName.call(this, topic);
 
                 args.shift();
                 args.push(topic);
 
-                returns = publishRoot(topic, args, this);
 
-                return topic != 'all' && fire('all', args, this) || returns;
+                publishCategories([], topic.split(SEPARATOR), args, topic, this);
+
+                if (topic != 'all') {
+                    fire('all', args, this);
+                }
             };
 
 
@@ -279,7 +259,6 @@
 
                 if (topic == 'all') {
                     _listeners = {};
-                    _tree = {};
                     return true;
 
                 } else {
