@@ -102,11 +102,6 @@
 
             var self = this,
 
-            getCategoryPrefix = function() {
-                var id = objectContext && this && !this.prototype && this[idKey] || '';
-                return category && category + (id && SEPARATOR + id || '') + SEPARATOR || '';
-            },
-
             getFullCategoryTopicName = function(topic) {
                 if (category) {
                     var id = objectContext && this && !this.prototype && this[idKey] || '';
@@ -219,6 +214,9 @@
                     }
 
                     return out;
+
+                } else {
+                    throw new SyntaxError('Incorrect syntax for subscribe()');
                 }
 
             };

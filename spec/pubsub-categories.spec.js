@@ -130,6 +130,28 @@ var specs = function(PubSub) {
                 publish(testTopic, testMessage);
             });
 
+
+            it('can publish "all" topic manually', function() {
+                var listener = sinon.spy();
+
+                subscribe('all', listener);
+
+                publish('all');
+
+                expect(listener.calledOnce).to.be.true;
+            });
+
+
+            it('should throw an error when using incorrect syntax for subscribe', function() {
+                expect(function() {
+                    subscribe();
+                }).to.throw(SyntaxError);
+
+                expect(function() {
+                    subscribe('aTopic');
+                }).to.throw(SyntaxError);
+            });
+
         });
 
         it('can subscribe to map of listeners', function() {
@@ -294,6 +316,37 @@ var specs = function(PubSub) {
 
     describe('object contexts', function() {
 
+        it('can attach PubSub methods to an object', function() {
+            var category = 'testObjectContext',
+            topic = 'testTopic',
+            categoryDotTopic = category + '.' + topic,
+
+            listener1 = sinon.spy(),
+            listener2 = sinon.spy(),
+            listener3 = sinon.spy(),
+            listener4 = sinon.spy(),
+
+            testContext = { 'tester': 'yesm' },
+
+            context = PubSub.context(category, testContext);
+
+            testContext.subscribe(topic, listener1);
+            PubSub.subscribe(topic, listener2);
+            PubSub.subscribe(category, listener3);
+            PubSub.subscribe('all', listener4);
+
+            testContext.publish(topic);
+
+            expect(listener1.calledOnce).to.be.true;
+            expect(listener2.calledOnce).to.be.true;
+            expect(listener3.calledOnce).to.be.true;
+            expect(listener4.calledOnce).to.be.true;
+
+            expect(listener2.calledAfter(listener1)).to.be.true;
+            expect(listener3.calledAfter(listener2)).to.be.true;
+            expect(listener4.calledAfter(listener3)).to.be.true;
+        });
+
         it('can attach pubsub methods to object constructor', function() {
             var category = 'MyObject',
             topic = 'testTopic',
@@ -436,7 +489,39 @@ var specs = function(PubSub) {
             expect(topicFired).to.equal(true, 'topic did not publish');
         });
 
-        it('can attach event namespace to objects', function() {
+        it('can attach PubSub methods to a namespace within an object', function() {
+            var category = 'testObjectContext',
+            topic = 'testTopic',
+            categoryDotTopic = category + '.' + topic,
+            namespace = 'testNamespace',
+
+            listener1 = sinon.spy(),
+            listener2 = sinon.spy(),
+            listener3 = sinon.spy(),
+            listener4 = sinon.spy(),
+
+            testContext = { 'tester': 'yesm' },
+
+            context = PubSub.context(category, testContext, namespace);
+
+            testContext[namespace].subscribe(topic, listener1);
+            PubSub.subscribe(topic, listener2);
+            PubSub.subscribe(category, listener3);
+            PubSub.subscribe('all', listener4);
+
+            testContext[namespace].publish(topic);
+
+            expect(listener1.calledOnce).to.be.true;
+            expect(listener2.calledOnce).to.be.true;
+            expect(listener3.calledOnce).to.be.true;
+            expect(listener4.calledOnce).to.be.true;
+
+            expect(listener2.calledAfter(listener1)).to.be.true;
+            expect(listener3.calledAfter(listener2)).to.be.true;
+            expect(listener4.calledAfter(listener3)).to.be.true;
+        });
+
+        it('can attach PubSub methods to a namespace within an object constructor', function() {
             var MyObject = function(id) { this.id = id; },
 
             namespace = 'events',
