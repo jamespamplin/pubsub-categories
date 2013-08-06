@@ -29,42 +29,34 @@
          * @param {String} topic
          * @returns {Boolean} true when a listener fired, false to stop propagation.
          */
-        fire = function(topic, args, context) {
-            var returns,
-            topicListeners = _listeners[topic];
+        fire = function(topic, message, originalTopic, context) {
+            var topicListeners = _listeners[topic], i, listener;
 
-            if (topicListeners instanceof Array) {
+            if (topicListeners && topicListeners[0]) {
 
-                for (var i = 0, listener; returns !== false && (listener = topicListeners[i]); i++) {
-
-                    // TODO: should try / catch around event?
-                    returns = fireListener(listener, args, context);
+                for (i = 0; (listener = topicListeners[i]); i++) {
+                    fireListener(listener, message, originalTopic, context);
                 }
 
-            } else {
-                returns = fireListener(topicListeners, args, context);
+            } else if (topicListeners) {
+                fireListener(topicListeners, message, originalTopic, context);
             }
-
-            return returns;
         },
 
 
         /**
          * Fire listener
          * @param {Function} listener
-         * @returns result from listener call - false to stop propagation, true otherwise.
          */
-        fireListener = function(listener, args, context) {
+        fireListener = function(listener, message, topic, context) {
             context = context || undefined;
 
-            if (listener) {
-                if (typeof(listener) !== 'function' && listener.context) {
-                    context = listener.context;
-                    listener = listener.listener;
-                }
-
-                return listener.apply(context, args) !== false;
+            if (typeof(listener) !== 'function' && listener.context) {
+                context = listener.context;
+                listener = listener.listener;
             }
+
+            listener.call(context, message, topic);
         },
 
 
@@ -81,7 +73,7 @@
          * @param  {Object} context         this context for callback receivers.
          */
         publishCategories = function(parents, topic, base, message, originalTopic, context) {
-            fire(topic.concat(base).join(SEPARATOR), message, context);
+            fire(topic.concat(base).join(SEPARATOR), message, originalTopic, context);
 
 
             if (topic[1]) { // categories
@@ -134,8 +126,11 @@
              * the topic name, eg: "category.topic". When published, listeners subscribed to the full topic,
              * the topic on its own and category on its own will be fired.
              *
-             * Multiple hierarchies with as many sub-categories as you like are also supported. The more sub-categories,
-             * the more specific your event will be - listeners are fired from most specific to least.
+             * Multiple hierarchies with as many sub-categories as you like are also supported. More specific categories
+             * are fired before least specific.
+             *
+             * Categories are also published with the same message as the original published topic, allowing
+             * listener callbacks on a category which publish when any topic is published with that category.
              *
              * Finally, an "all" event will trigger when any event is published.
              *
@@ -150,24 +145,17 @@
              * 8. all
              *
              *
-             * @param {String} topic Name of event topic to publish.
-             * @param {...} all extra arguments will be passed to any subscribed listeners.
-             * @return true if an event listener was fired.
+             * @param {String} topic     Name of event topic to publish.
+             * @param {Object} message   Object to be sent to any subscribed listeners callbacks.
              */
-            this.publish = function(topic) { // args[1..n] become event params
-
-                var args = Array.prototype.slice.call(arguments);
+            this.publish = function(topic, message) {
 
                 topic = getFullCategoryTopicName.call(this, topic);
 
-                args.shift();
-                args.push(topic);
-
-
-                publishCategories(undefined, topic.split(SEPARATOR), [], args, topic, this);
+                publishCategories(undefined, topic.split(SEPARATOR), [], message, topic, this);
 
                 if (topic != 'all') {
-                    fire('all', args, this);
+                    fire('all', message, topic, this);
                 }
             };
 

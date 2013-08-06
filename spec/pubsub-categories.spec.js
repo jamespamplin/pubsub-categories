@@ -40,24 +40,21 @@ var specs = function(PubSub) {
             it('can publish an event', function() {
 
                 var eventName = 'testEvent',
-                fired = false,
-                returned = -1; // set to something unexpected
+                fired = false;
 
                 subscribe(eventName, function() {
                     fired = true;
                 });
 
-                returned = publish(eventName);
+                publish(eventName);
 
-                // expect(returned).to.equal(true, 'unexpected return type');
                 expect(fired).to.equal(true, 'Event listener never fired');
 
             });
 
             it('can publish an event (async)', function(done) {
 
-                var eventName = 'testEvent',
-                returned = -1; // set to something unexpected
+                var eventName = 'testEvent';
 
                 this.timeout(100);
 
@@ -67,8 +64,7 @@ var specs = function(PubSub) {
                 });
 
                 window.setTimeout(function() {
-                    returned = publish(eventName);
-                    // expect(returned).to.equal(true, 'unexpected return type');
+                    publish(eventName);
                 }, 50);
 
             });
@@ -91,11 +87,9 @@ var specs = function(PubSub) {
 
             it('can publish with no subscribers', function() {
 
-                var eventName = 'root.testEvent',
+                var eventName = 'root.testEvent';
 
-                returns = publish(eventName);
-
-                expect(returns).to.equal(undefined);
+                publish(eventName);
 
             });
 
@@ -116,46 +110,24 @@ var specs = function(PubSub) {
                 expect(value).to.equal(4);
             });
 
-            it('can publish an event with multiple parameters', function() {
-                var topic = 'testMultiParam',
-                value = 1,
+            it('can publish a topic with a message object', function(done) {
+                var testTopic = 'testMessage',
+                testMessage = {
+                    'something': 'yes',
+                    'somethingElse': 'uhuh'
+                };
 
-                param1, param2, param3, paramLength;
 
-                subscribe(topic, function(x, y, z) {
-                    param1 = x;
-                    param2 = y;
-                    param3 = z;
-                    paramLength = arguments.length;
+                subscribe(testTopic, function(message, topic) {
 
-                    value += x / y;
+                    expect(topic).to.equal(testTopic);
+                    expect(message).to.equal(testMessage);
+
+                    done();
                 });
 
-                publish(topic, 4, 2);
 
-                expect(param1).to.equal(4);
-                expect(param2).to.equal(2);
-                expect(param3).to.equal(topic);
-                expect(paramLength).to.equal(3);
-                expect(value).to.equal(3);
-
-            });
-
-            it('can stop event propagation', function() {
-                var topic = 'testStopPropagation',
-                value = 1;
-
-                subscribe(topic, function() { value += 2; return -1; }); // shouldn't stop as not === false
-                subscribe(topic, function() { value += 3; return false; }); // expect stop
-                subscribe(topic, function() { value /= 2; });
-
-                publish(topic);
-
-                expect(value).to.equal(6);
-
-                publish(topic);
-
-                expect(value).to.equal(11);
+                publish(testTopic, testMessage);
             });
 
         });
