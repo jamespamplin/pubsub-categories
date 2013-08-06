@@ -68,44 +68,37 @@
         },
 
 
-        publishParents = function(parents, topic, base, message, fullTopicString, context) {
+
+        /**
+         * Internal - publishes categories associated to a topic.
+         * Recursively reduces categories on a topic and fires in order.
+         *
+         * @param  {Array} parents          Reduced parent categories for a topic.
+         * @param  {Array} topic            Core topic to publish.
+         * @param  {Array} base             Base topic and categories appended to each publish.
+         * @param  {Object} message         Object message to send to listening receiver callbacks.
+         * @param  {String} originalTopic   The original topic string published.
+         * @param  {Object} context         this context for callback receivers.
+         */
+        publishCategories = function(parents, topic, base, message, originalTopic, context) {
             fire(topic.concat(base).join(SEPARATOR), message, context);
-
-
-            if (topic[1]) {
-                var first = topic.shift();
-                if (parents[0]) {
-                    publishParents([], parents.slice(0), topic.concat(base), message, context);
-                }
-                parents.push(first);
-
-                publishParents(parents, topic, base, message, fullTopicString, context);
-
-            } else if (parents[0]) {
-                publishParents([], parents, base, message, fullTopicString, context);
-            }
-
-        },
-
-
-        publishCategories = function(parents, topic, message, fullTopicString, context) {
-            fire(topic.join(SEPARATOR), message, context);
 
 
             if (topic[1]) { // categories
                 var first = topic.shift();
 
-
-                if (parents[0]) {
-                    publishParents([], parents.slice(0), topic, message, fullTopicString, context);
+                if (parents && parents[0]) {
+                    publishCategories(undefined, parents.slice(0), topic.concat(base), message, originalTopic, context);
+                } else {
+                    parents = [];
                 }
 
                 parents.push(first);
 
-                publishCategories(parents, topic, message, fullTopicString, context);
+                publishCategories(parents, topic, base, message, originalTopic, context);
 
-            } else if (parents[0]) {
-                publishCategories([], parents, message, fullTopicString, context);
+            } else if (parents && parents[0]) {
+                publishCategories(undefined, parents, base, message, originalTopic, context);
             }
 
         },
@@ -148,12 +141,13 @@
              *
              * For an example, the published topic: "category.subcategory.topic" will fire listeners in this order:
              * 1. category.subcategory.topic
-             * 2. category.topic
-             * 3. topic
-             * 4. category.subcategory
-             * 5. subcategory
-             * 6. category
-             * 7. all
+             * 2. subcategory.topic
+             * 3. category.topic
+             * 4. topic
+             * 5. category.subcategory
+             * 6. subcategory
+             * 7. category
+             * 8. all
              *
              *
              * @param {String} topic Name of event topic to publish.
@@ -170,7 +164,7 @@
                 args.push(topic);
 
 
-                publishCategories([], topic.split(SEPARATOR), args, topic, this);
+                publishCategories(undefined, topic.split(SEPARATOR), [], args, topic, this);
 
                 if (topic != 'all') {
                     fire('all', args, this);

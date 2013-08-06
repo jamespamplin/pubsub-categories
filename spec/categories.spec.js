@@ -207,7 +207,8 @@ describe('publish hierarchical categories in global context', function() {
                     publishedListeners.push(listener);
                     if (i === last) {
                         for (var j = 0, topic; (topic = orderedTopics[j]); j++) {
-                            expect(topics[topic]).to.have.been.calledOnce;
+                            expect(topics[topic].calledOnce, 'spy ' + topic + ' calledOnce').to.be.true;
+                            // expect(topics[topic]).to.have.been.calledOnce;
                             // expect(topics[topic]).to.have.been.calledWith(topicToPublish);
                             // expect(topics[topic]).to.equal(publishedListeners[i], 'incorrect fire order on topic: ' + topic);
                         }
