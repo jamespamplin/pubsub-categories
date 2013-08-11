@@ -7,9 +7,8 @@
  */
 
 /**
- * @module pubsub-categories
- *
  * publish / subscribe event model with hierarchical topic categories.
+ * @module pubsub-categories
  */
 
 /*global define:false,module:false */
@@ -18,6 +17,11 @@
 
     'use strict';
 
+    /**
+     * Create a new Private context for PubSub events.
+     * @constructor
+     * @exports pubsub-categories
+     */
     var PubSub = function(SEPARATOR) {
         SEPARATOR = SEPARATOR || '.';
 
@@ -97,7 +101,9 @@
 
 
 
-
+        /**
+         * Creates a new PubSub context bound to a category and optionally an object.
+         */
         PubSubContext = function(category, objectContext, idKey) {
 
             var self = this,
@@ -130,6 +136,7 @@
              * Finally, an "all" event will trigger when any event is published.
              *
              * For an example, the published topic: "category.subcategory.topic" will fire listeners in this order:
+             *
              * 1. category.subcategory.topic
              * 2. subcategory.topic
              * 3. category.topic
@@ -160,7 +167,7 @@
             /**
              * Subscribe to event topics with a listener callback function.
              *
-             * Topics can be hierarchical, specifying categories using a "." (dot) separator. See {@link #publish}
+             * Topics can be hierarchical, specifying categories using a "." (dot) separator. See {@link module:pubsub-categories#publish}
              * for details about how hierarchical listeners are published.
              *
              * The "all" topic can also be subscribed to, to listen to every single event published.
@@ -223,17 +230,35 @@
 
 
 
-            this.subscribeOnce = function(/* string */ topic, /* function */ listener, /* object */ context) {
+            /**
+             * Subscribes a listener to a topic just once. When the topic is fired,
+             * the listener is removed so that it will no longer receive published messages
+             * for that topic.
+             *
+             * @param  {String}   topic     Name of topic to listen to.
+             * @param  {Function} listener  Callback which will receive a published message on topic.
+             * @param  {Object=}  context   Object context used as "this" when listener is fired.
+             */
+            this.subscribeOnce = function(topic, listener, context) {
                 var listenerWrapper = function() {
                     self.unsubscribe(topic, listenerWrapper);
                     listener.apply(this, arguments);
                 };
                 listenerWrapper._ps_orig = listener;
 
-                return self.subscribe(topic, listenerWrapper, context);
+                self.subscribe(topic, listenerWrapper, context);
             };
 
 
+            /**
+             * Stops a listener from receiving published messages on a topic.
+             *
+             * @param  {String}   topic     Name of topic to unsubscribe from. Can be "all"
+             *                              to remove all subscribers from all topics.
+             * @param  {Function} listener  The callback listener to unsubscribe.
+             * @return {boolean}            true when one or many subscribers were removed.
+             *                              false if none were found.
+             */
             this.unsubscribe = function(/* string */ topic, /* function */ listener) {
                 topic = getFullCategoryTopicName.call(this, topic);
 

@@ -136,6 +136,15 @@ module.exports = function(grunt) {
       }
     },
 
+    jsdoc: {
+      build: {
+        src: ['pubsub-categories.js'],
+        options: {
+          destination: 'doc',
+          configure: 'doc/jsdoc.json'
+        }
+      }
+    },
 
     uglify: {
       build: {
@@ -163,6 +172,7 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-contrib-uglify');
   grunt.loadNpmTasks('grunt-contrib-watch');
   grunt.loadNpmTasks('grunt-mocha-phantomjs');
+  grunt.loadNpmTasks('grunt-jsdoc');
 
 
   grunt.registerTask('test', ['jshint', 'mocha_phantomjs', 'mocha_cover']);
